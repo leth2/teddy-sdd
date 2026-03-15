@@ -9,6 +9,8 @@ allowed-tools: Bash Read Write Edit MultiEdit Grep Glob LS WebFetch WebSearch
 ## 준비 단계
 
 1. `.sdd/specs/$FEATURE/` 전체 읽기 (spec.json, requirements.md, design.md, tasks.md)
+   - requirements.md가 **100줄 이상**이면 전체 로드 대신 lazy load 적용:
+     → `.agents/skills/sdd-lazy-load/SKILL.md` 읽고 INDEX 방식으로 관련 섹션만 로드
 2. **`.sdd/lessons/` 읽기 — 반복 버그 예방 체크리스트**:
    - 먼저 `INDEX.md`만 읽기 (없으면 건너뜀)
    - 현재 기술 스택 키워드로 관련 ID 필터링 (횟수 2+ 우선)
