@@ -9,5 +9,5 @@ Read `.agents/skills/sdd-retrospective/SKILL.md` and follow its instructions.
 Feature: `$ARGUMENTS` (없으면 최근 완료된 전체 스펙 대상 스프린트 회고)
 
 예시:
-- `/sdd:retrospective memo-crud`  → 특정 Feature 회고
-- `/sdd:retrospective`            → 스프린트 전체 회고
+- `/sdd:retro memo-crud`  → 특정 Feature 회고
+- `/sdd:retro`            → 스프린트 전체 회고

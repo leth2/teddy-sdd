@@ -37,7 +37,7 @@ SDD(Spec-Driven Development)는 **스티어링 → 스펙 → 코드** 계층으
 
 ### 작업 중 개별 단계를 실행할 때
 - `[선택] /sdd:spec-research <feature>` — 스펙 전 리서치 (외부 프로토콜/API 있을 때 권장)
-- `/sdd:spec-requirements <feature>` — 요구사항만 생성
+- `/sdd:spec-req <feature>` — 요구사항만 생성
 - `/sdd:spec-design <feature>` — 설계만 생성
 - `/sdd:spec-tasks <feature>` — 태스크만 생성
 
@@ -45,7 +45,7 @@ SDD(Spec-Driven Development)는 **스티어링 → 스펙 → 코드** 계층으
 - `/sdd:spec-status` — 전체 진행 상황
 - `/sdd:briefing` — overnight 작업 후 브리핑
 - `/sdd:spec-reset [feature]` — 아카이브 및 재시작
-- `/sdd:steering-trim` — 긴 스티어링 파일 압축
+- `/sdd:steer-trim` — 긴 스티어링 파일 압축
 
 ## 핵심 원칙
 

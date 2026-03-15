@@ -128,12 +128,12 @@ Problem + Try에서 반복 가능한 교훈을 추출해 `.sdd/lessons/` 저장:
   → L-003: @impl 태그 누락 시 spec-delta 정밀도 저하 (재발 +1)
 
 다음 Feature 시작하려면:
-  → /sdd:spec-decompose 또는 /sdd:spec-requirements
+  → /sdd:spec-decomp 또는 /sdd:spec-req
 ```
 
 ## 스프린트 회고 (여러 Feature 묶음)
 
-`/sdd:retrospective` 인자 없이 실행하면 → 최근 완료된 Feature 전체 대상:
+`/sdd:retro` 인자 없이 실행하면 → 최근 완료된 Feature 전체 대상:
 
 ```
 완료된 스펙 목록 → 각 retrospective.md 요약 →

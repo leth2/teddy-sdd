@@ -11,7 +11,7 @@ allowed-tools: Bash Read Write Edit Glob Grep LS WebSearch WebFetch
 > **SDD는 직선이 아니라 피드백 루프다.** 스펙 → 코드가 아니라, 코드를 짜면서 스펙이 개선된다.  
 > 검증은 이 루프를 건강하게 유지하기 위한 도구다.
 
-각 spec 단계 완료 직후 자동 실행 (또는 수동 `/sdd:spec-validate` 호출)
+각 spec 단계 완료 직후 자동 실행 (또는 수동 `/sdd:spec-val` 호출)
 
 ## Requirements 검증
 

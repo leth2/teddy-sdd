@@ -9,6 +9,6 @@ Read `.agents/skills/sdd-decompose/SKILL.md` and follow its instructions.
 Epic: `$ARGUMENTS`
 
 예시:
-- `/sdd:spec-decompose "사용자 관리 시스템"`
-- `/sdd:spec-decompose "결제 및 구독 플랫폼"`
-- `/sdd:spec-decompose "알림 시스템 (이메일, 푸시, SMS)"`
+- `/sdd:spec-decomp "사용자 관리 시스템"`
+- `/sdd:spec-decomp "결제 및 구독 플랫폼"`
+- `/sdd:spec-decomp "알림 시스템 (이메일, 푸시, SMS)"`

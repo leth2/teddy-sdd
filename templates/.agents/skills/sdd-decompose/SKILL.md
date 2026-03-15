@@ -142,4 +142,4 @@ mkdir -p .sdd/specs/${TIMESTAMP}-${FEATURE_SLUG}/
 - Feature는 3개 미만이면 Epic이 너무 작음 → 직접 spec-requirements 사용 권장
 - Feature는 8개 초과면 Epic이 너무 큼 → 중간 Epic으로 재분해 권장
 - Story는 Feature당 2~8개 (너무 많으면 Feature 분리)
-- 자동 생성된 requirements.md는 초안 — `/sdd:spec-requirements`로 보완 가능
+- 자동 생성된 requirements.md는 초안 — `/sdd:spec-req`로 보완 가능

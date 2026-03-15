@@ -100,7 +100,7 @@ spec 작업 시작 전, 구현 결정 전 무조건 읽는다.
 ## 파일 크기 규칙
 
 - 각 references 파일 ≤100줄
-- 100줄 넘으면 `/sdd:steering-trim` 실행
+- 100줄 넘으면 `/sdd:steer-trim` 실행
 - 핵심만 스티어링에, 상세는 별도 references 파일로
 
 ## Sync 모드 주의사항

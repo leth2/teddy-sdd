@@ -17,7 +17,7 @@ find .sdd/specs -name "requirements.md" | sort
 
 파일이 없으면:
 ```
-📭 스펙이 없어요. /sdd:spec-requirements 로 스펙을 먼저 작성하세요.
+📭 스펙이 없어요. /sdd:spec-req 로 스펙을 먼저 작성하세요.
 ```
 
 ### Step 2: 각 requirements.md에서 키워드 검색
@@ -51,7 +51,7 @@ REQ ID 없는 줄도 매칭되면 별도 섹션으로 표시:
 ```
 ⚠️ REQ ID 없음 (구버전 스펙):
   [user-auth] "인증 토큰은 JWT 방식을 사용한다."
-  → /sdd:spec-requirements user-auth 재실행으로 REQ ID 부여 가능
+  → /sdd:spec-req user-auth 재실행으로 REQ ID 부여 가능
 ```
 
 ## 출력 형식
