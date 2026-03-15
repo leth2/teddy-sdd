@@ -106,3 +106,7 @@ allowed-tools: Read Write Edit Glob Grep
 ## 상세 태스크 구조 및 예시
 
 → `references/tdd-structure.md` 참조
+
+## 출력 템플릿
+
+→ `references/tasks-template.md` 참조

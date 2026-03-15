@@ -57,3 +57,7 @@ SDD(Spec-Driven Development)는 **스티어링 → 스펙 → 코드** 계층으
 
 - 진실의 계층 및 드리프트 처리: `references/hierarchy.md`
 - 모든 커맨드 설명 및 예시: `references/command-reference.md`
+
+## 스펙 초기화 메타데이터 스키마
+
+→ `references/spec-init.json` 참조

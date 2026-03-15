@@ -70,3 +70,7 @@ allowed-tools: Bash Read Write Edit Glob Grep LS WebSearch WebFetch
 ## 아키텍처 패턴 및 인터페이스 형식 상세
 
 → `references/patterns.md` 참조
+
+## 출력 템플릿
+
+→ `references/design-template.md` 참조

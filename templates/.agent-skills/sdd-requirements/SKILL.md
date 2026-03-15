@@ -108,3 +108,7 @@ UserAuthService는 JWT 토큰을 발급한다.
 ## EARS 형식 상세
 
 → `references/ears-format.md` 참조
+
+## 출력 템플릿
+
+→ `references/requirements-template.md` 참조
