@@ -15,7 +15,7 @@ allowed-tools: Bash Read Write Edit MultiEdit Grep Glob LS WebFetch WebSearch
    - 해당 ID가 속한 카테고리 파일만 읽기 (전체 파일 로딩 금지)
    - 추출된 lessons을 구현 전 체크리스트로 변환
    - lessons가 없으면 건너뜀
-3. `.sdd/steering/` 전체 읽기 — **구현 전반의 가드레일**:
+3. `.agents/skills/project-steering/SKILL.md` 읽기 → 기본 references (product/tech/structure) 로드 — **구현 전반의 가드레일**:
    - `tech`: 사용할 언어/프레임워크/라이브러리 기준
    - `structure`: 파일 위치, 네이밍 규칙 기준
    - **스티어링과 충돌하는 구현 선택 금지**

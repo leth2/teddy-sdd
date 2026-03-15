@@ -24,7 +24,7 @@
 ## 스티어링 모드
 
 ### Bootstrap 모드
-- 언제: `.sdd/steering/`이 비어있거나 새 프로젝트
+- 언제: `.agents/skills/project-steering/`가 없거나 새 프로젝트
 - 동작: 코드베이스 분석 후 스티어링 파일 생성
 
 ### Sync 모드

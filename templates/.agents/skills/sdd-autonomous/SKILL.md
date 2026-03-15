@@ -13,7 +13,7 @@ overnight 또는 무인 실행 시 AI의 의사결정 기준.
 
 ## 결정 우선순위 (SDD 계층 준수)
 
-1. **스티어링** (`.sdd/steering/`) — 방향과 원칙의 진실
+1. **스티어링** (`.agents/skills/project-steering/references/`) — 방향과 원칙의 진실
 2. **요구사항** (`requirements.md`) — 스티어링에서 파생된 스펙
 3. **설계** (`design.md`) — 요구사항에서 파생된 스펙
 4. **기존 코드베이스 패턴** — 참고만, 진실이 아님

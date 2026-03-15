@@ -32,7 +32,7 @@
 새 프로젝트이거나 스티어링이 없을 때.
 
 단계:
-1. `.sdd/steering/` 템플릿 로드 (`steering/product/`, `tech/`, `structure/`)
+1. `.agents/skills/project-steering/SKILL.md` 로드 → 기본 references (product, tech, structure)
 2. `sdd-steering-rules` 스킬 읽기
 3. 코드베이스 분석 (Glob, Grep, Read)
 4. 패턴 추출 → What-only 스티어링 생성
@@ -41,7 +41,7 @@
 기존 스티어링이 있을 때. 드리프트 감지가 목적.
 
 단계:
-1. `.sdd/steering/` 전체 읽기
+1. `.agents/skills/project-steering/SKILL.md` 읽기 → 기본 references (product/tech/structure) 로드
 2. 현재 스펙 확인
 3. 코드베이스 분석
 4. 드리프트 보고 (자동 수정하지 않음)

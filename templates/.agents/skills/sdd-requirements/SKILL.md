@@ -9,7 +9,7 @@ allowed-tools: Bash Read Write Edit Glob Grep LS WebSearch WebFetch
 ## 단계
 
 1. `.sdd/specs/$FEATURE/spec.json`, `requirements.md` 읽기 (기존 내용 파악)
-2. `.sdd/steering/` 전체 읽기
+2. `.agents/skills/project-steering/SKILL.md` 읽기 → 기본 references (product/tech/structure) 로드
    - 스티어링 없으면 경고: "스티어링 없이 생성 → 방향 없을 수 있음. `/sdd:steering` 권장"
 3. EARS 형식으로 requirements.md 생성 (아래 규칙 적용)
 4. **스티어링 정렬 검증**:

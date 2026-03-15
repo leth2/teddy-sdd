@@ -10,7 +10,7 @@ allowed-tools: Bash Read Write Glob LS
 
 ### 1. 대상 확인
 - 대상 없으면 `.sdd/specs/` 전체 목록 표시 후 선택 요청
-- `--steering` 있으면 `.sdd/steering/`도 대상에 포함
+- `--steering` 있으면 `.agents/skills/project-steering/`도 대상에 포함
 
 ### 2. 재사용 분석 (`--skip-analysis` 없을 때)
 

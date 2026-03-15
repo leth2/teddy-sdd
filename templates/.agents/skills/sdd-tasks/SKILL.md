@@ -26,7 +26,7 @@ allowed-tools: Read Write Edit Glob Grep
 
 1. `.sdd/specs/$FEATURE/spec.json`, `requirements.md`, `design.md` 읽기
 2. `-y` 있으면 requirements, design 자동 승인
-3. `.sdd/steering/` 전체 읽기
+3. `.agents/skills/project-steering/SKILL.md` 읽기 → 기본 references (product/tech/structure) 로드
 4. tasks.md 생성 (아래 규칙 적용)
 5. **정렬 검증**:
    - 모든 requirements ID가 태스크와 매핑됐는가?

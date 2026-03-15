@@ -20,7 +20,7 @@
 ## 경로
 - Skills: `.agents/skills/` (AgentSkills 표준, lazy-load)
 - Specs: `.sdd/specs/TIMESTAMP-feature/`
-- Steering: `.sdd/steering/` (`/sdd:steering`이 생성)
+- Steering: `.agents/skills/project-steering/` (`/sdd:steering`이 생성, AgentSkills 스킬로 관리)
 - Lessons: `.sdd/lessons/`
 - Logs: `.sdd/logs/`
 
