@@ -8,28 +8,29 @@ Claude Code용 스펙 주도 개발(SDD) 워크플로우. **스펙이 진실(Spe
 
 ## 핵심 철학
 
-1. **스펙이 먼저** — 코드보다 스펙을 먼저 작성. 무엇을 왜 만드는지 정의 후 어떻게를 고민.
-2. **CLAUDE.md ≤ 50줄** — 부트스트랩은 지도만 제공. 지능은 `.sdd/skills/` 에.
-3. **Steering = "무엇"만** — 코드 예시 없음. 사실, 결정, 패턴만 기록.
-4. **스킬 기반 lazy loading** — 명령어는 얇게, 로직은 스킬 파일에. 필요할 때만 로드.
+1. **스펙이 먼저** — 무엇을 왜 만드는지 정의 후 어떻게를 고민.
+2. **CLAUDE.md ≤ 50줄** — 부트스트랩은 지도만 제공. 지능은 `.agents/skills/` 에.
+3. **Steering = What-only** — 코드 예시 없음. 사실, 결정, 패턴만 기록.
+4. **스킬 기반 lazy loading** — 명령어는 얇게, 로직은 스킬에. 필요할 때만 로드.
 5. **스펙-코드 1:1 추적** — `@impl` 태그로 스펙 문장 ↔ 코드 위치 연결.
-6. **순서 식별 폴더링** — `TIMESTAMP-feature` (UTC Unix epoch). 타임존 무관, 충돌 없음.
 
 ---
 
 ## 빠른 시작
 
 ```bash
-# 프로젝트에 설치
+# 원라이너 설치
 curl -fsSL https://raw.githubusercontent.com/leth2/teddy-sdd/master/install.sh | bash -s /path/to/project
 
-# 또는 직접 실행
-./install.sh /path/to/your/project
+# 또는 클론 후 직접 실행
+git clone https://github.com/leth2/teddy-sdd.git
+./teddy-sdd/install.sh /path/to/project
 ```
 
 설치 후 Claude Code에서:
 
 ```
+/sdd:steering                        # 프로젝트 메모리 초기화 (첫 실행)
 /sdd:spec-requirements <기능 설명>   # 요구사항 작성
 /sdd:spec-design <feature>           # 설계 문서 생성
 /sdd:spec-tasks <feature>            # 태스크 목록 생성
@@ -38,10 +39,68 @@ curl -fsSL https://raw.githubusercontent.com/leth2/teddy-sdd/master/install.sh |
 
 ---
 
+## 설치 후 구조
+
+```
+프로젝트/
+├── CLAUDE.md                          # ≤50줄 부트스트랩
+│
+├── .agents/skills/                    # AgentSkills 표준 경로 (cross-client)
+│   ├── sdd-workflow/SKILL.md          # 전체 워크플로우 가이드
+│   ├── sdd-requirements/
+│   │   ├── SKILL.md
+│   │   └── references/
+│   │       ├── ears-format.md
+│   │       └── requirements-template.md   ← 스펙 템플릿
+│   ├── sdd-design/
+│   │   ├── SKILL.md
+│   │   └── references/
+│   │       ├── patterns.md
+│   │       └── design-template.md         ← 설계 템플릿
+│   ├── sdd-tasks/
+│   │   ├── SKILL.md
+│   │   └── references/
+│   │       ├── tdd-structure.md
+│   │       └── tasks-template.md          ← 태스크 템플릿
+│   ├── sdd-impl/SKILL.md
+│   ├── sdd-delta/SKILL.md
+│   ├── sdd-steering-rules/
+│   │   ├── SKILL.md
+│   │   └── references/
+│   │       ├── truth-hierarchy.md
+│   │       ├── steering-product-template.md   ← 스티어링 템플릿
+│   │       ├── steering-tech-template.md
+│   │       └── steering-structure-template.md
+│   └── ... (17개 스킬)
+│
+├── .claude/commands/sdd/              # Claude Code 커맨드 (얇은 진입점)
+│   ├── spec-requirements.md
+│   ├── spec-impl.md
+│   └── ...
+│
+└── .sdd/                              # 런타임 데이터 (git 관리 대상)
+    ├── specs/TIMESTAMP-feature/       # 스펙 폴더 (UTC Unix epoch)
+    │   ├── requirements.md            # 요구사항 (@impl 태그 포함)
+    │   ├── design.md
+    │   └── tasks.md
+    ├── steering/                      # /sdd:steering이 생성 (처음엔 빈 폴더)
+    ├── lessons/                       # 누적 교훈 (Lessons Loop)
+    ├── logs/                          # 자동화 실행 로그
+    ├── briefings/                     # 브리핑 기록
+    └── archive/                       # 아카이브된 스펙
+```
+
+### AgentSkills 호환성
+
+`.agents/skills/`는 [AgentSkills 표준](https://agentskills.io) cross-client 경로입니다.  
+Claude Code, Cursor, Gemini CLI 등 AgentSkills 호환 도구에서 자동 발견됩니다.
+
+---
+
 ## SDD 워크플로우
 
 ```
-spec-requirements → spec-design → spec-plan(검토) → spec-tasks → spec-impl
+/sdd:steering → /sdd:spec-requirements → /sdd:spec-design → /sdd:spec-tasks → /sdd:spec-impl
 ```
 
 각 단계는 사람의 검토 후 다음으로 진행. 자동화가 필요하면 `spec-auto` 사용.
@@ -50,7 +109,7 @@ spec-requirements → spec-design → spec-plan(검토) → spec-tasks → spec-
 
 ## @impl 태그 — 스펙-코드 추적
 
-요구사항 파일에 `@impl` 태그를 달면 스펙 문장과 코드 위치를 연결할 수 있습니다.
+요구사항 파일에 `@impl` 태그를 달면 스펙 문장과 코드 위치를 연결합니다.
 
 ```markdown
 <!-- requirements.md -->
@@ -58,43 +117,17 @@ spec-requirements → spec-design → spec-plan(검토) → spec-tasks → spec-
 - 메모를 ID로 조회할 수 있다 <!-- @impl: src/MemoService.ts#MemoService.get -->
 ```
 
-변경 전파 분석:
-
 ```
 /sdd:spec-delta <feature>
 ```
 
-스펙이 바뀌었을 때 영향받는 코드 위치를 즉시 파악:
+스펙이 바뀌었을 때 영향받는 코드 위치 즉시 파악:
 
 ```
 ✅ @impl 태그 있음 → 코드 위치 직접 특정 (src/MemoService.ts L17 ±5줄)
 ⚠️ @impl 태그 없음 → 추정 검색 결과 표시
-⚠️ 삭제된 문장 → 삭제 후보 경고 (자동 삭제 없음)
+⚠️ 삭제된 문장     → 삭제 후보 경고 (자동 삭제 없음)
 ```
-
----
-
-## Overnight 자동화
-
-```
-/sdd:spec-auto <만들 것 설명>
-```
-
-자고 일어나면 구현 완료:
-1. 스펙 이름 자동 생성
-2. requirements → design → tasks 자동 생성
-3. 각 태스크 TDD 구현
-4. 진행 상황 `.sdd/logs/YYYY-MM-DD.md` 기록
-
-아침 브리핑:
-
-```
-/sdd:briefing
-```
-
-- ✅ 밤사이 완료된 작업
-- ⚠️ 중단된 곳과 이유
-- 🔜 지금 당장 해야 할 다음 액션
 
 ---
 
@@ -108,31 +141,6 @@ spec-requirements → spec-design → spec-plan(검토) → spec-tasks → spec-
 ```
 
 `spec-impl` 실행 시 관련 lessons 자동 로드 → 같은 실수 반복 방지.
-
----
-
-## 디렉토리 구조 (설치 후)
-
-```
-프로젝트/
-├── CLAUDE.md                              # ≤50줄 부트스트랩
-├── .claude/commands/sdd/                  # 커맨드 (얇은 지시)
-└── .sdd/
-    ├── specs/1741834500-feature/          # TIMESTAMP-feature 스펙 폴더
-    │   ├── requirements.md                # 요구사항 (@impl 태그 포함)
-    │   ├── design.md                      # 설계 문서
-    │   └── tasks.md                       # 태스크 목록
-    ├── steering/                          # 프로젝트 메모리
-    │   ├── product/SKILL.md               # 제품 방향
-    │   ├── tech/SKILL.md                  # 기술 결정
-    │   └── structure/SKILL.md             # 파일 구조
-    ├── skills/                            # 재사용 로직 (lazy-load)
-    ├── lessons/                           # 누적 교훈 (Lessons Loop)
-    ├── logs/                              # 자동화 실행 로그
-    ├── briefings/                         # 브리핑 기록
-    ├── archive/                           # 아카이브된 스펙
-    └── settings/                          # 템플릿, 규칙
-```
 
 ---
 
@@ -165,7 +173,7 @@ spec-requirements → spec-design → spec-plan(검토) → spec-tasks → spec-
 | 커맨드 | 설명 |
 |--------|------|
 | `/sdd:steering` | 스티어링 생성/업데이트 |
-| `/sdd:steering-trim [file]` | 긴 스티어링 분리 (≤50줄 유지) |
+| `/sdd:steering-trim [file]` | 긴 스티어링 분리 (≤100줄 유지) |
 | `/sdd:spec-capture` | 구현 중 교훈 즉시 포착 |
 | `/sdd:spec-lessons` | 적용 가능 교훈 조회 |
 
@@ -178,22 +186,6 @@ spec-requirements → spec-design → spec-plan(검토) → spec-tasks → spec-
 | `/sdd:spec-research <topic>` | 외부 스펙/기술 조사 |
 | `/sdd:spec-sync` | 스펙-코드 동기화 상태 확인 |
 | `/sdd:roadmap` | 전체 진행 로드맵 |
-
----
-
-## Reset 사용법
-
-요구사항이 크게 바뀌거나 아키텍처를 재설계할 때:
-
-```
-/sdd:spec-reset <feature>
-```
-
-리셋 전 AI가 자동 분석:
-- ✅ **살릴 것**: 완료된 태스크, 유효한 요구사항, 재사용 가능한 설계
-- ❌ **버릴 것**: 미완료 태스크, 방향이 바뀐 요구사항
-
-원본 삭제 없음 — `.sdd/archive/` 에 보관.
 
 ---
 
