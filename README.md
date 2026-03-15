@@ -70,6 +70,12 @@ git clone https://github.com/leth2/teddy-sdd.git
 ├── CLAUDE.md                          # ≤50줄 부트스트랩
 │
 ├── .agents/skills/                    # AgentSkills 표준 경로 (cross-client)
+│   ├── project-steering/              # ⚡ /sdd:steering 첫 실행 시 자동 생성
+│   │   ├── SKILL.md                   #    인덱스 + 동적 로딩 규칙
+│   │   └── references/
+│   │       ├── product.md             #    제품 목적·기능·제약 (요구사항 작업 시)
+│   │       ├── tech.md                #    기술 스택·결정 (설계·구현 시)
+│   │       └── structure.md           #    폴더 구조·네이밍 (파일 생성 시)
 │   ├── sdd-workflow/SKILL.md          # 전체 워크플로우 가이드
 │   ├── sdd-requirements/
 │   │   ├── SKILL.md
@@ -107,7 +113,7 @@ git clone https://github.com/leth2/teddy-sdd.git
     │   ├── requirements.md            # 요구사항 (@impl 태그 포함)
     │   ├── design.md
     │   └── tasks.md
-    ├── steering/                      # /sdd:steering이 생성 (처음엔 빈 폴더)
+    ├── steering/                      # (레거시, 현재는 .agents/skills/project-steering/ 사용)
     ├── lessons/                       # 누적 교훈 (Lessons Loop)
     ├── logs/                          # 자동화 실행 로그
     ├── briefings/                     # 브리핑 기록
