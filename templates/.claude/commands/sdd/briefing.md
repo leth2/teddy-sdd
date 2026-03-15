@@ -4,6 +4,6 @@ allowed-tools: Bash, Read, Write, Glob, LS
 argument-hint: [--since <hours>]
 ---
 
-Read `.sdd/skills/sdd-briefing/SKILL.md` and follow its instructions.
+Read `.agent-skills/sdd-briefing/SKILL.md` and follow its instructions.
 
 Options: `$ARGUMENTS` (e.g., `--since 8` for last 8 hours; default 12)

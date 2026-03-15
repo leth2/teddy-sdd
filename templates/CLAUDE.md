@@ -15,7 +15,7 @@
 ## 경로
 - Specs: `.sdd/specs/<feature>/`
 - Steering: `.sdd/steering/` (product, tech, structure 각각 SKILL.md)
-- Skills: `.sdd/skills/` (AgentSkills 형식, lazy-load)
+- Skills: `.agent-skills/` (AgentSkills 형식, lazy-load)
 - Logs: `.sdd/logs/` (자동화 진행 기록)
 - Archive: `.sdd/archive/` (리셋된 스펙)
 - Briefings: `.sdd/briefings/` (브리핑 문서)
@@ -25,4 +25,4 @@
 - 스킬 파일은 필요할 때만 읽기 (progressive disclosure)
 - 자동 실행 시 `.sdd/logs/YYYY-MM-DD.md`에 진행 상황 기록
 - 큰 변경 전 반드시 `/sdd:spec-reset`으로 아카이브
-- 전체 워크플로우: read `.sdd/skills/sdd-workflow/SKILL.md`
+- 전체 워크플로우: read `.agent-skills/sdd-workflow/SKILL.md`

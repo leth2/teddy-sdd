@@ -47,7 +47,7 @@ allowed-tools: Bash Read Write Edit Glob Grep LS WebSearch WebFetch
 
 ## 생성 후 자동 검증
 
-`.sdd/skills/sdd-validate/SKILL.md` 읽고 Design 검증 실행.
+`.agent-skills/sdd-validate/SKILL.md` 읽고 Design 검증 실행.
 외부 스펙 참조 발견 시 위 프로세스 적용.
 검증 통과 후에만 `approvals.design.generated: true` 설정.
 

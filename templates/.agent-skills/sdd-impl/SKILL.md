@@ -127,7 +127,7 @@ allowed-tools: Bash Read Write Edit MultiEdit Grep Glob LS WebFetch WebSearch
 
 ## 생성 후 자동 검증
 
-구현 완료 후 `.sdd/skills/sdd-validate/SKILL.md` 읽고 Implementation 검증 실행.
+구현 완료 후 `.agent-skills/sdd-validate/SKILL.md` 읽고 Implementation 검증 실행.
 
 ## 오류 처리 (자율 모드)
 

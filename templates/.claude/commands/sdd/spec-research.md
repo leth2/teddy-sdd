@@ -4,7 +4,7 @@ allowed-tools: Bash, Read, Write, Edit, Glob, Grep, LS, WebSearch, WebFetch
 argument-hint: <feature-name> [--quick]
 ---
 
-Read `.sdd/skills/sdd-research/SKILL.md` and follow its instructions.
+Read `.agent-skills/sdd-research/SKILL.md` and follow its instructions.
 
 Feature: `$ARGUMENTS`
 

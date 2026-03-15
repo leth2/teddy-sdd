@@ -126,6 +126,6 @@ await db.connect()
 
 스티어링에서 스킬 파일 참조:
 ```
-> 상세: read .sdd/skills/<topic>-detail.md
+> 상세: read .agent-skills/<topic>-detail.md
 ```
 AI는 해당 스킬이 필요할 때만 읽음.

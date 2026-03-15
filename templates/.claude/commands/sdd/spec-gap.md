@@ -4,7 +4,7 @@ allowed-tools: Bash, Read, Write, Edit, Glob, Grep, LS
 argument-hint: [--layer roadmap|coverage|tests|deps]
 ---
 
-Read `.sdd/skills/sdd-gap/SKILL.md` and follow its instructions.
+Read `.agent-skills/sdd-gap/SKILL.md` and follow its instructions.
 
 Arguments: `$ARGUMENTS`
 

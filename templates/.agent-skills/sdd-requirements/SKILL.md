@@ -58,7 +58,7 @@ allowed-tools: Bash Read Write Edit Glob Grep LS WebSearch WebFetch
 ## 생성 후 자동 검증
 
 요구사항 생성 완료 후 즉시 실행:
-1. `.sdd/skills/sdd-validate/SKILL.md` 읽기
+1. `.agent-skills/sdd-validate/SKILL.md` 읽기
 2. Requirements 검증 체크리스트 실행
 3. 실패 항목 수정 후 spec.json 업데이트
 

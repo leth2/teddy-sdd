@@ -101,7 +101,7 @@ allowed-tools: Read Write Edit Glob Grep
 
 ## 생성 후 자동 검증
 
-`.sdd/skills/sdd-validate/SKILL.md` 읽고 Tasks 검증 실행.
+`.agent-skills/sdd-validate/SKILL.md` 읽고 Tasks 검증 실행.
 
 ## 상세 태스크 구조 및 예시
 

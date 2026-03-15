@@ -1,0 +1,19 @@
+# 워크스페이스 파일 — 레포에 포함하지 않음
+.clawhub/
+.openclaw/
+.sdd/
+AGENTS.md
+BOOTSTRAP.md
+HEARTBEAT.md
+IDENTITY.md
+SOUL.md
+TOOLS.md
+USER.md
+MEMORY.md
+dev/
+memory/
+skills/
+test/
+test-all/
+teddy-team-sync/
+node_modules/

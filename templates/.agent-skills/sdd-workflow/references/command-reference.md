@@ -70,5 +70,5 @@ TDD 구현. Red-Green-Refactor 사이클.
 
 ### `/sdd:steering-trim [file]`
 100줄 넘는 스티어링을 스킬로 분리.
-- 상세 내용을 `.sdd/skills/<topic>-detail.md`로 이동
+- 상세 내용을 `.agent-skills/<topic>-detail.md`로 이동
 - 스티어링에는 요약과 참조 링크만 유지

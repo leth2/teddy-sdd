@@ -4,6 +4,6 @@ allowed-tools: Bash, Read, Write, Edit, MultiEdit, Grep, Glob, LS, WebFetch, Web
 argument-hint: <feature-name> [task-numbers]
 ---
 
-Read `.sdd/skills/sdd-impl/SKILL.md` and follow its instructions.
+Read `.agent-skills/sdd-impl/SKILL.md` and follow its instructions.
 
 Feature: `$ARGUMENTS` (optionally specify task numbers like `1.1` or `1,2,3`)

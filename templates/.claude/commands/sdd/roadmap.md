@@ -4,7 +4,7 @@ allowed-tools: Bash, Read, Write, Edit, Glob, Grep, LS
 argument-hint: [--init | --update] [--feature "아이디어"]
 ---
 
-Read `.sdd/skills/sdd-roadmap/SKILL.md` and follow its instructions.
+Read `.agent-skills/sdd-roadmap/SKILL.md` and follow its instructions.
 
 Arguments: `$ARGUMENTS`
 

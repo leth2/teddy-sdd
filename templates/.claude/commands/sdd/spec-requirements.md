@@ -4,6 +4,6 @@ allowed-tools: Bash, Read, Write, Edit, Glob, Grep, LS, WebSearch, WebFetch
 argument-hint: <feature-name>
 ---
 
-Read `.sdd/skills/sdd-requirements/SKILL.md` and follow its instructions.
+Read `.agent-skills/sdd-requirements/SKILL.md` and follow its instructions.
 
 Feature: `$ARGUMENTS`
