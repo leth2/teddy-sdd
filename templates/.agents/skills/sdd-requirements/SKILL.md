@@ -28,18 +28,34 @@ allowed-tools: Bash Read Write Edit Glob Grep LS WebSearch WebFetch
 
 ## REQ ID 체계
 
-모든 요구사항에 고유 ID를 부여한다:
+모든 요구사항에 **전역 고유 ID**를 부여한다:
 
 ```
 **1.1** `REQ-001` 메모는 고유 UUID v4 ID를 가진다.
 **1.2** `REQ-002` 메모를 ID로 조회할 수 있다.
 ```
 
+**전역 카운터**: `.sdd/req-counter.json`으로 관리
+
+```json
+{
+  "last_req_id": 10,
+  "specs": {
+    "1234-memo-crud": { "range": [1, 10] },
+    "5678-auth":      { "range": [11, 20] }
+  }
+}
+```
+
+**ID 부여 절차:**
+1. `.sdd/req-counter.json` 읽기 (없으면 `{ "last_req_id": 0, "specs": {} }` 생성)
+2. `last_req_id + 1`부터 요구사항 수만큼 순서대로 부여
+3. 부여 완료 후 `last_req_id`와 `specs` 범위 업데이트 후 저장
+
 **규칙:**
-- 형식: `REQ-NNN` (3자리, 001부터 시작)
-- 스펙 내 순서대로 자동 부여
+- 형식: `REQ-NNN` (3자리 이상, 자동 확장: 100개 초과 시 `REQ-NNN` → 4자리 `REQ-NNNN`)
 - 한 번 부여된 ID는 변경하지 않음 (요구사항 수정 시 ID 유지)
-- 새 요구사항 추가 시 기존 최대값 + 1
+- 새 요구사항 추가 시 카운터에서 다음 번호 취득
 
 ## 번호 체계
 

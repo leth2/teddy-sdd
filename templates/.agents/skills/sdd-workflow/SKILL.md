@@ -48,6 +48,7 @@ SDD(Spec-Driven Development)는 **스티어링 → 스펙 → 코드** 계층으
 |------|------|
 | `.agents/skills/project-steering/references/` | 프로젝트 방향 (product, tech, structure) |
 | `.sdd/specs/<feature>/` | 각 feature의 스펙 파일들 |
+| `.sdd/req-counter.json` | 전역 REQ ID 카운터 (스펙 간 고유 ID 보장) |
 | `.agents/skills/` | AI가 lazy-load하는 방법론 파일 |
 | `.sdd/logs/` | 자동화 실행 로그 |
 | `.sdd/archive/` | 리셋된 스펙 아카이브 |

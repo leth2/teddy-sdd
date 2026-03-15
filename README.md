@@ -123,6 +123,7 @@ git clone https://github.com/leth2/teddy-sdd.git
 │   └── ...
 │
 └── .sdd/                              # 런타임 데이터 (git 관리 대상)
+    ├── req-counter.json               # 전역 REQ ID 카운터 (스펙 간 중복 방지)
     ├── specs/TIMESTAMP-feature/       # 스펙 폴더 (UTC Unix epoch)
     │   ├── requirements.md            # 요구사항 (@impl 태그 포함)
     │   ├── design.md
