@@ -11,20 +11,27 @@ allowed-tools: Bash Read Write Edit Glob Grep LS
 스펙 문장 뒤에 코드 위치를 명시하는 태그:
 
 ```markdown
-UserAuthService는 JWT와 Refresh 토큰을 발급한다.
-<!-- @impl: src/auth/UserAuthService.ts#UserAuthService.issueToken -->
-<!-- @impl: src/auth/UserAuthService.ts#UserAuthService.issueRefreshToken -->
+`REQ-001` UserAuthService는 JWT와 Refresh 토큰을 발급한다.
+<!-- @impl: REQ-001 → src/auth/UserAuthService.ts#UserAuthService.issueToken -->
+<!-- @impl: REQ-001 → src/auth/UserAuthService.ts#UserAuthService.issueRefreshToken -->
 
-토큰 만료는 24시간이다.
-<!-- @impl: src/auth/constants.ts#TOKEN_EXPIRY -->
+`REQ-002` 토큰 만료는 24시간이다.
+<!-- @impl: REQ-002 → src/auth/constants.ts#TOKEN_EXPIRY -->
+```
+
+**구버전 형식 (하위 호환):**
+```markdown
+<!-- @impl: src/auth/UserAuthService.ts#UserAuthService.issueToken -->
 ```
 
 **형식 규칙:**
-- 구분자: `#` (파일경로 vs 식별자)
+- REQ ID 포함 형식: `<!-- @impl: REQ-NNN → 파일경로#식별자 -->`
+- 구버전: `<!-- @impl: 파일경로#식별자 -->` (REQ ID 없이)
+- 구분자: `#` (파일경로 vs 식별자), `→` (REQ ID vs 경로)
 - 클래스 메서드: `ClassName.methodName`
 - 최상위 함수/상수: `identifierName`
 - 파일 전체 범위: `src/auth/UserAuthService.ts` (식별자 없이 파일만)
-- 한 문장에 여러 태그 허용 (1:N 매핑)
+- 한 요구사항에 여러 태그 허용 (1:N 매핑)
 
 ## 실행 흐름
 
@@ -144,31 +151,31 @@ grep -rn "$KEYWORD" src/ --include="*.ts" --include="*.js" --include="*.py" | he
 
 ### 📝 변경된 스펙 문장
 
-수정: "기존 문장 텍스트"
+수정: REQ-001 "기존 문장 텍스트"
   → "새 문장 텍스트"
 
-삭제: "삭제된 문장 텍스트"
+삭제: REQ-002 "삭제된 문장 텍스트"
 
 ### 🔗 수정 대상 코드
 
-  📄 src/auth/UserAuthService.ts#UserAuthService.issueToken
+  REQ-001 📄 src/auth/UserAuthService.ts#UserAuthService.issueToken
      42: async issueToken(...) {
      43:   ...
      45: }
 
-  ⚠️ 추정 | src/auth/TokenStore.ts (keyword: TokenStore)
+  ⚠️ 추정 (REQ ID 없음) | src/auth/TokenStore.ts (keyword: TokenStore)
      — @impl 태그 없음, grep으로 추정
 
 ### 🗑️ 삭제 후보 코드 (연결된 스펙 문장 삭제됨)
 
-  📄 src/auth/legacyAuth.ts#legacyLogin
-  → 이 코드는 삭제된 스펙과 연결됨
+  REQ-002 📄 src/auth/legacyAuth.ts#legacyLogin
+  → 이 코드는 삭제된 스펙(REQ-002)과 연결됨
   → 코드 삭제 또는 스펙 복원 여부를 확인하세요 (자동 삭제 안 함)
 
 ### 💡 권장 액션
 
-1. UserAuthService.issueRefreshToken 신규 구현
-2. TOKEN_EXPIRY 값 24h → 7d 변경
+1. REQ-001: UserAuthService.issueToken 수정
+2. REQ-003: TOKEN_EXPIRY 값 24h → 7d 변경
 → spec-impl을 실행하시겠습니까? [y/N]
 ```
 

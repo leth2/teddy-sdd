@@ -91,14 +91,16 @@ allowed-tools: Bash Read Write Edit MultiEdit Grep Glob LS WebFetch WebSearch
 
 1. 구현된 파일경로 + 식별자(함수/클래스/상수명) 파악
 2. `requirements.md`에서 관련 문장 찾기 (태스크 설명 키워드로 매칭)
-3. 해당 문장 아래에 `<!-- @impl: 파일경로#식별자 -->` 태그 추가
+3. 해당 문장 아래에 `<!-- @impl: REQ-NNN → 파일경로#식별자 -->` 태그 추가
+   - REQ ID 있으면 반드시 포함 (`REQ-NNN →` 형식)
+   - REQ ID 없는 구버전 요구사항은 기존 형식 유지 (`<!-- @impl: 파일경로#식별자 -->`)
    - 이미 동일한 태그가 있으면 중복 추가 안 함
    - 관련 문장을 못 찾으면 파일 맨 끝에 미매핑 목록으로 기록
 4. 생성된 태그 목록을 개발자에게 확인 요청:
    ```
    @impl 태그 자동 생성 — 확인해주세요:
-   - "UserAuthService는 JWT 토큰을 발급한다."
-     → <!-- @impl: src/auth/UserAuthService.ts#UserAuthService.issueToken -->
+   - REQ-001 "UserAuthService는 JWT 토큰을 발급한다."
+     → <!-- @impl: REQ-001 → src/auth/UserAuthService.ts#UserAuthService.issueToken -->
    맞으면 OK, 수정이 필요하면 알려주세요.
    ```
 5. **개발자 OK 확인 후 → Write/Edit 도구로 `requirements.md`에 즉시 저장**

@@ -26,6 +26,21 @@ allowed-tools: Bash Read Write Edit Glob Grep LS WebSearch WebFetch
 - **코드 예시 없음**: 절대 포함하지 않음
 - **기술 스택 참조 최소화**: 설계 문서에서 다룸
 
+## REQ ID 체계
+
+모든 요구사항에 고유 ID를 부여한다:
+
+```
+**1.1** `REQ-001` 메모는 고유 UUID v4 ID를 가진다.
+**1.2** `REQ-002` 메모를 ID로 조회할 수 있다.
+```
+
+**규칙:**
+- 형식: `REQ-NNN` (3자리, 001부터 시작)
+- 스펙 내 순서대로 자동 부여
+- 한 번 부여된 ID는 변경하지 않음 (요구사항 수정 시 ID 유지)
+- 새 요구사항 추가 시 기존 최대값 + 1
+
 ## 번호 체계
 
 - 최상위: `1`, `2`, `3`
@@ -99,9 +114,11 @@ tests:
 
 **형식 참고 (나중에 추가할 때):**
 ```markdown
-UserAuthService는 JWT 토큰을 발급한다.
-<!-- @impl: src/auth/UserAuthService.ts#UserAuthService.issueToken -->
+`REQ-001` UserAuthService는 JWT 토큰을 발급한다.
+<!-- @impl: REQ-001 → src/auth/UserAuthService.ts#UserAuthService.issueToken -->
 ```
+
+REQ ID를 포함하면 문장이 수정되어도 코드 위치 추적이 유지됨.
 
 `spec-delta` 커맨드는 이 태그를 기반으로 스펙 변경 시 영향 코드를 추적함.
 

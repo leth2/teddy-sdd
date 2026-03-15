@@ -54,15 +54,15 @@ allowed-tools: Bash Read Write Edit Grep Glob LS
 
 ```
 📋 변경 분류 결과:
-  [수정] "고유 ID" → "고유 UUID v4 ID"
+  [수정] REQ-001 "고유 ID" → "고유 UUID v4 ID"
          spec-delta 실행 중...
          → src/memo/MemoService.ts#MemoService.create (L17 ±5줄)
 
-  [신규] "태그 기능 — 메모에 태그를 붙일 수 있다."
+  [신규] REQ-005 (신규 부여) "태그 기능 — 메모에 태그를 붙일 수 있다."
          requirements.md에 추가됨
          → /sdd:spec-impl memo-crud 로 구현 진행 필요
 
-  [삭제 후보] "하드 삭제"
+  [삭제 후보] REQ-003 "하드 삭제"
          ⚠️ 자동 삭제 안 함. 수동 확인 필요.
 
 ✅ requirements.md 업데이트 완료
