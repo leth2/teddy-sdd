@@ -45,8 +45,8 @@ allowed-tools: Bash Read Write Edit MultiEdit Grep Glob LS WebFetch WebSearch
 
 ## 체크포인트 (각 태스크 완료 시)
 
-- `tasks.md`의 해당 항목 `[ ]` → `[x]` 업데이트
-- 로그에 완료 타임스탬프 기록
+- `tasks.md`의 해당 항목 `[ ]` → `[x]` 업데이트 (Write 도구로 저장)
+- `.sdd/logs/YYYY-MM-DD.md`에 완료 타임스탬프 기록 (Write/Edit 도구로 저장)
 
 ## 구현 중 스펙 빈틈 발견 시 (피드백 루프)
 
@@ -99,11 +99,15 @@ allowed-tools: Bash Read Write Edit MultiEdit Grep Glob LS WebFetch WebSearch
    @impl 태그 자동 생성 — 확인해주세요:
    - "UserAuthService는 JWT 토큰을 발급한다."
      → <!-- @impl: src/auth/UserAuthService.ts#UserAuthService.issueToken -->
-   맞으면 [Enter], 수정하려면 직접 편집 후 계속하세요.
+   맞으면 OK, 수정이 필요하면 알려주세요.
    ```
+5. **개발자 OK 확인 후 → Write/Edit 도구로 `requirements.md`에 즉시 저장**
+   - 확인만 받고 저장 안 하면 태그가 유실됨
+   - 저장 완료 후 "✅ @impl 태그 저장됨" 메시지 출력
 
 **규칙:**
 - 자동 생성은 제안이지 확정이 아님 — 개발자 확인 필수
+- 확인 후 반드시 Write 도구로 파일에 저장할 것
 - 잘못된 매핑은 sdd-validate와 spec-delta를 오염시킴
 
 ## 완료 기준 (엄격)
@@ -134,6 +138,8 @@ allowed-tools: Bash Read Write Edit MultiEdit Grep Glob LS WebFetch WebSearch
 → `references/tdd-protocol.md` 참조
 
 ## 진행 로그 형식
+
+파일: `.sdd/logs/YYYY-MM-DD.md` (없으면 생성, 있으면 append)
 
 ```
 [HH:MM] 🔴 태스크 N.M 테스트 작성
