@@ -4,7 +4,7 @@ allowed-tools: Bash, Read, Write, Edit, Glob, Grep, LS
 argument-hint: <feature> [--staged]
 ---
 
-Read `.agent-skills/sdd-delta/SKILL.md` and follow its instructions.
+Read `.agents/skills/sdd-delta/SKILL.md` and follow its instructions.
 
 Arguments: `$ARGUMENTS`
 

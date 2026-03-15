@@ -4,7 +4,7 @@ allowed-tools: Bash, Read, Write, Edit, Glob, Grep, LS
 argument-hint: <feature-name>
 ---
 
-Read `.agent-skills/sdd-validate/SKILL.md` and then perform a triangle sync check.
+Read `.agents/skills/sdd-validate/SKILL.md` and then perform a triangle sync check.
 
 Feature: `$ARGUMENTS`
 

@@ -4,6 +4,6 @@ allowed-tools: Bash, Read, Write, Edit, Glob, Grep, LS, WebSearch, WebFetch
 argument-hint: <description-or-feature-name> [--interactive]
 ---
 
-Read `.agent-skills/sdd-requirements/SKILL.md`, `.agent-skills/sdd-design/SKILL.md`, and `.agent-skills/sdd-tasks/SKILL.md` in sequence.
+Read `.agents/skills/sdd-requirements/SKILL.md`, `.agents/skills/sdd-design/SKILL.md`, and `.agents/skills/sdd-tasks/SKILL.md` in sequence.
 
 Run spec-init logic, then generate requirements → design → tasks. Without `--interactive`, auto-approve each step. Log progress to `.sdd/logs/YYYY-MM-DD.md`.

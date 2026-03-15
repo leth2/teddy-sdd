@@ -4,6 +4,6 @@ allowed-tools: Bash, Read, Write, Glob, LS
 argument-hint: [feature-name] [--steering] [--skip-analysis]
 ---
 
-Read `.agent-skills/sdd-reset/SKILL.md` and follow its instructions.
+Read `.agents/skills/sdd-reset/SKILL.md` and follow its instructions.
 
 Target: `$ARGUMENTS` (feature name, optional flags: `--steering`, `--skip-analysis`)

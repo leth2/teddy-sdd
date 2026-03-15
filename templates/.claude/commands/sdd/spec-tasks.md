@@ -4,6 +4,6 @@ allowed-tools: Read, Write, Edit, Glob, Grep
 argument-hint: <feature-name> [-y]
 ---
 
-Read `.agent-skills/sdd-tasks/SKILL.md` and follow its instructions.
+Read `.agents/skills/sdd-tasks/SKILL.md` and follow its instructions.
 
 Feature: `$ARGUMENTS` (pass `-y` to auto-approve requirements and design)

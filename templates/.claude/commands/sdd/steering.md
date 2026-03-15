@@ -4,6 +4,6 @@ allowed-tools: Bash, Read, Write, Edit, Glob, Grep, LS
 argument-hint: [--intent "<새 방향>"]
 ---
 
-Read `.agent-skills/sdd-steering-rules/SKILL.md` and follow its instructions.
+Read `.agents/skills/sdd-steering-rules/SKILL.md` and follow its instructions.
 
 Mode is auto-detected: Bootstrap (no steering files), Sync (files exist, no `--intent`), or Rewrite (`--intent "<새 방향>"`). Arguments: `$ARGUMENTS`
