@@ -66,21 +66,6 @@ AI 코딩 에이전트를 쓰다 보면 이런 일이 반복됩니다:
 
 ---
 
-## 엔터프라이즈 애자일 루프
-
-teddy-sdd는 스펙 기반 개발 전체 사이클을 커버해요:
-
-```
-spec-decompose (Epic 분해)
-  → spec-requirements → spec-design → spec-tasks → spec-impl
-    → retrospective (회고 + 교훈 저장)
-      → 다음 Feature...
-```
-
-교훈은 `.sdd/lessons/`에 쌓이고, `spec-requirements` 단계에서 자동으로 참조돼요.
-
----
-
 ## 스펙 계층 구조
 
 큰 기능은 계층으로 관리할 수 있어요:
@@ -98,15 +83,18 @@ Epic (큰 목표)          → /sdd:spec-decomp "사용자 관리 시스템"
 
 ## 적합한 프로젝트 규모
 
-| | teddy-sdd | 별도 시스템 권장 |
-|---|---|---|
-| 팀 규모 | 1~5명 | 6명 이상 |
-| 피처 수 | ~20개 | 수십 개 이상 |
-| 스펙 관리 | 마크다운 파일 | Jira / Linear 등 |
-| 배포 주기 | 빠른 반복 | 엔터프라이즈 릴리즈 |
+teddy-sdd는 빠른 반복이 가능한 환경에 최적화돼 있어요.
 
-**잘 맞는 경우:** 사이드 프로젝트, PoC, 스타트업 초기, 개인 도구 개발  
-**맞지 않는 경우:** 수백 개 요구사항 관리, 복잡한 승인 워크플로우, 다수 팀 병렬 개발
+| | teddy-sdd 적합 | 고려 필요 |
+|---|---|---|
+| 팀 규모 | 1~10명 (AI 포함) | 다수 팀 병렬 개발 |
+| Feature 수 | ~50개 | 수백 개 이상 |
+| 스펙 관리 | 마크다운 + Git | 복잡한 승인 워크플로우 |
+| 배포 주기 | 빠른 반복 (일/주 단위) | 엔터프라이즈 릴리즈 사이클 |
+| 추적 도구 | `.sdd/lessons/` + @impl | Jira / Linear 등 별도 시스템 |
+
+**잘 맞는 경우:** 사이드 프로젝트, PoC, 스타트업, 개인 도구, AI 에이전트 팀  
+**추가 고려 필요:** 외부 감사/컴플라이언스 요구, 수백 개 요구사항 동시 관리
 
 ---
 
@@ -174,7 +162,7 @@ git clone https://github.com/leth2/teddy-sdd.git
 │   └── ... (17개 스킬)
 │
 ├── .claude/commands/sdd/              # Claude Code 커맨드 (얇은 진입점)
-│   ├── spec-requirements.md
+│   ├── spec-req.md
 │   ├── spec-impl.md
 │   └── ...
 │
