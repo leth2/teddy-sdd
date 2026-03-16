@@ -14,7 +14,7 @@ spec 폴더 없음
   → /sdd:spec-req  — 요구사항 작성
   → /sdd:spec-design
   → /sdd:spec-tasks
-  → 태희님 OK 후 → /sdd:spec-impl
+  → 사용자 OK 후 → /sdd:spec-impl
 ```
 **Input**: 기능 설명 (자연어)
 **Output**: requirements.md → design.md → tasks.md → 코드
