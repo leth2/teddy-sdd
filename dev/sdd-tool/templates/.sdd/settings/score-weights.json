@@ -1,0 +1,23 @@
+{
+  "_description": "스펙 품질 스코어링 가중치 설정. 회고 캘리브레이션으로 자동 조정됨.",
+  "internal": {
+    "_weight": 0.4,
+    "conflict": 0.15,
+    "ambiguity": 0.15,
+    "error": 0.10
+  },
+  "steering": {
+    "_weight": 0.6,
+    "product": 0.30,
+    "tech": 0.20,
+    "structure": 0.10
+  },
+  "grades": {
+    "A": { "min": 90, "label": "즉시 구현 가능" },
+    "B": { "min": 70, "label": "경미한 수정 후 구현" },
+    "C": { "min": 50, "label": "상당한 수정 필요" },
+    "D": { "min": 0, "label": "재작성 권장" }
+  },
+  "calibrated_at": null,
+  "calibration_source": null
+}
