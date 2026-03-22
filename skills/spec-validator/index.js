@@ -68,8 +68,7 @@ function formatOutput(result, label) {
 
 async function main() {
   const args = process.argv.slice(2);
-  const noLlm = args.includes("--no-llm");
-  if (noLlm) process.env.CC_PROXY_DISABLED = "1";
+  const withLLM = args.includes("--with-llm");
 
   const filePath = args.find(a => !a.startsWith("--"));
 
@@ -87,7 +86,7 @@ async function main() {
     label = "inline text";
   }
 
-  const result = await calculateSlopScore(text, filePath);
+  const result = await calculateSlopScore(text, filePath, { withLLM });
   console.log(formatOutput(result, label));
 
   if (result.verdict === "SLOP") process.exit(1);

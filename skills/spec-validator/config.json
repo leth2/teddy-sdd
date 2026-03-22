@@ -1,24 +1,36 @@
 {
   "profiles": {
     "requirements": {
-      "signals": ["s1", "s_ac", "s2"],
-      "weights": { "s1": 0.35, "s_ac": 0.50, "s2": 0.15 },
-      "note": "결정 밀도 + AC 완결성 + 중복도(S2, LLM). Phase 2 LLM Judge 활성화."
+      "signals": ["s1", "s_ac"],
+      "weights": { "s1": 0.40, "s_ac": 0.60 },
+      "note": "결정 밀도 + AC 완결성. S2(중복도)는 --with-llm 플래그로만 활성화."
     },
     "design": {
-      "signals": ["s1", "s3", "s4", "s_why"],
-      "weights": { "s1": 0.25, "s3": 0.30, "s4": 0.20, "s_why": 0.25 },
-      "note": "계약 완결성(S3) + 코드 위장(S4) + 설계 근거(S_WHY, LLM). Phase 2 LLM Judge 활성화."
+      "signals": ["s1", "s3", "s4"],
+      "weights": { "s1": 0.35, "s3": 0.40, "s4": 0.25 },
+      "note": "계약 완결성(S3) + 코드 위장(S4). S_WHY는 --with-llm 플래그로만 활성화."
     },
     "tasks": {
       "signals": ["s1", "s_done"],
       "weights": { "s1": 0.35, "s_done": 0.65 },
-      "note": "완료 기준(S_DONE) 최우선. S3 제거 — tasks는 Pre/Post 문서가 아님."
+      "note": "완료 기준(S_DONE) 최우선."
     },
     "default": {
       "signals": ["s1", "s4"],
       "weights": { "s1": 0.60, "s4": 0.40 },
       "note": "파일 유형 불명 시 기본 프로파일."
+    }
+  },
+  "profiles_with_llm": {
+    "requirements": {
+      "signals": ["s1", "s_ac", "s2"],
+      "weights": { "s1": 0.35, "s_ac": 0.50, "s2": 0.15 },
+      "note": "--with-llm 활성화 시. S2(중복도) LLM Judge 포함."
+    },
+    "design": {
+      "signals": ["s1", "s3", "s4", "s_why"],
+      "weights": { "s1": 0.25, "s3": 0.30, "s4": 0.20, "s_why": 0.25 },
+      "note": "--with-llm 활성화 시. S_WHY(설계 근거) LLM Judge 포함."
     }
   },
   "thresholds": {
@@ -27,10 +39,11 @@
   },
   "phase": "2.0",
   "llm_judge": {
-    "enabled": true,
+    "enabled": false,
     "proxy_url": "http://localhost:8787",
     "model": "claude-sonnet-4-5",
-    "fallback_on_error": true
+    "fallback_on_error": true,
+    "note": "기본 비활성화. --with-llm 플래그로 활성화. 재현 가능한 기본 점수는 rule-based만 사용."
   },
-  "note": "Phase 1.5: S3 공통 제거 + S_AC(requirements 전용) + S_DONE(tasks 전용) 추가. Phase 2에서 실증 데이터로 가중치 교체 예정."
+  "note": "Phase 2.0: LLM Judge(S2/S_WHY) 분리. 기본 실행은 rule-based 점수로 재현 가능. --with-llm으로 LLM Judge 추가."
 }

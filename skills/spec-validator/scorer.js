@@ -109,10 +109,14 @@ const LLM_SIGNAL_META = {
   s_why: { name: "S_WHY", label: "설계 근거", inverted: true },
 };
 
-export async function calculateSlopScore(text, filePath = "") {
+export async function calculateSlopScore(text, filePath = "", { withLLM = false } = {}) {
   const config = loadConfig();
   const profileName = detectProfile(filePath);
-  const profile = config.profiles[profileName] || config.profiles.default;
+  // withLLM 플래그에 따라 프로파일 선택
+  const profileSet = withLLM && config.profiles_with_llm ? config.profiles_with_llm : config.profiles;
+  const profile = profileSet[profileName] || config.profiles[profileName] || config.profiles.default;
+  // LLM Judge 활성화 조건
+  const llmEnabled = withLLM && (config.llm_judge?.proxy_url ?? false);
   const { thresholds } = config;
 
   const signalResults = {};
@@ -122,7 +126,7 @@ export async function calculateSlopScore(text, filePath = "") {
     let result;
 
     if (LLM_SIGNALS.has(sigName)) {
-      const llmResult = await runLLMSignal(sigName, text, config);
+      const llmResult = await runLLMSignal(sigName, text, { ...config, llm_judge: { ...config.llm_judge, enabled: llmEnabled } });
       const meta = LLM_SIGNAL_META[sigName];
       result = { ...meta, ...llmResult };
     } else {
