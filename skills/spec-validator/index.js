@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
- * spec-validator CLI — Phase 1.5
- * Usage: node skills/spec-validator/index.js <파일경로> [--profile requirements|design|tasks]
+ * spec-validator CLI — Phase 2.0
+ * Usage: node skills/spec-validator/index.js <파일경로> [--no-llm]
  */
 
 import { readFileSync, existsSync } from "fs";
@@ -24,15 +24,17 @@ function formatOutput(result, label) {
   for (const [, sig] of Object.entries(signals)) {
     const bar = sig.score >= 60 ? "🟢" : sig.score >= 40 ? "🟡" : "🔴";
     const invertNote = sig.inverted ? "" : " ↑나쁨";
-    lines.push(`  ${sig.name.padEnd(8)} ${sig.label.padEnd(12)} ${String(sig.score).padStart(3)}/100  ${bar}${invertNote}`);
+    const srcNote = sig.source && sig.source !== 'rule' ? ` [${sig.source}]` : "";
+    lines.push(`  ${sig.name.padEnd(8)} ${sig.label.padEnd(12)} ${String(sig.score).padStart(3)}/100  ${bar}${invertNote}${srcNote}`);
   }
 
   lines.push("");
   lines.push(`종합 Slop Score: ${score} → ${emoji} ${verdict}`);
 
-  if (findings.length > 0) {
+  const importantFindings = findings.filter(f => f.severity !== 'info' || findings.length <= 3);
+  if (importantFindings.length > 0) {
     lines.push("", "발견된 문제:");
-    for (const f of findings) {
+    for (const f of importantFindings) {
       const sev = SEVERITY_EMOJI[f.severity] || "•";
       lines.push(`  ${sev} [${f.signal}] ${f.message}`);
     }
@@ -64,16 +66,15 @@ function formatOutput(result, label) {
   return lines.join("\n");
 }
 
-function main() {
+async function main() {
   const args = process.argv.slice(2);
-  const profileOverride = (() => {
-    const idx = args.indexOf("--profile");
-    return idx >= 0 ? args[idx + 1] : null;
-  })();
-  const filePath = args.find(a => !a.startsWith("--") && a !== profileOverride);
+  const noLlm = args.includes("--no-llm");
+  if (noLlm) process.env.CC_PROXY_DISABLED = "1";
+
+  const filePath = args.find(a => !a.startsWith("--"));
 
   if (!filePath) {
-    console.error("Usage: node index.js <파일경로> [--profile requirements|design|tasks]");
+    console.error("Usage: node index.js <파일경로> [--no-llm]");
     process.exit(1);
   }
 
@@ -86,11 +87,10 @@ function main() {
     label = "inline text";
   }
 
-  const effectivePath = profileOverride ? `${filePath.replace(/\.\w+$/, "")}-${profileOverride}.md` : filePath;
-  const result = calculateSlopScore(text, effectivePath);
+  const result = await calculateSlopScore(text, filePath);
   console.log(formatOutput(result, label));
 
   if (result.verdict === "SLOP") process.exit(1);
 }
 
-main();
+main().catch(e => { console.error(e); process.exit(1); });

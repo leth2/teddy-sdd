@@ -1,14 +1,14 @@
 {
   "profiles": {
     "requirements": {
-      "signals": ["s1", "s_ac"],
-      "weights": { "s1": 0.40, "s_ac": 0.60 },
-      "note": "결정 밀도 + AC 완결성. S3(계약) 제거 — requirements는 Pre/Post 문서가 아님."
+      "signals": ["s1", "s_ac", "s2"],
+      "weights": { "s1": 0.35, "s_ac": 0.50, "s2": 0.15 },
+      "note": "결정 밀도 + AC 완결성 + 중복도(S2, LLM). Phase 2 LLM Judge 활성화."
     },
     "design": {
-      "signals": ["s1", "s3", "s4"],
-      "weights": { "s1": 0.35, "s3": 0.40, "s4": 0.25 },
-      "note": "계약 완결성(S3) + 코드 위장(S4) 중심. 설계 문서에만 Pre/Post 요구."
+      "signals": ["s1", "s3", "s4", "s_why"],
+      "weights": { "s1": 0.25, "s3": 0.30, "s4": 0.20, "s_why": 0.25 },
+      "note": "계약 완결성(S3) + 코드 위장(S4) + 설계 근거(S_WHY, LLM). Phase 2 LLM Judge 활성화."
     },
     "tasks": {
       "signals": ["s1", "s_done"],
@@ -25,6 +25,12 @@
     "slop": 70,
     "warn": 45
   },
-  "phase": "1.5",
+  "phase": "2.0",
+  "llm_judge": {
+    "enabled": true,
+    "proxy_url": "http://localhost:8787",
+    "model": "claude-sonnet-4-5",
+    "fallback_on_error": true
+  },
   "note": "Phase 1.5: S3 공통 제거 + S_AC(requirements 전용) + S_DONE(tasks 전용) 추가. Phase 2에서 실증 데이터로 가중치 교체 예정."
 }
