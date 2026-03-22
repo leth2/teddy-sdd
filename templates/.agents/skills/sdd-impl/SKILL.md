@@ -6,150 +6,84 @@ allowed-tools: Bash Read Write Edit MultiEdit Grep Glob LS WebFetch WebSearch
 
 # TDD 구현
 
+## ⛔ 사전 검증 게이트 (AGENT KILL)
+
+**spec-impl 실행 전 반드시 수행. 이 단계를 건너뛰면 안 된다.**
+
+```
+node .agents/skills/spec-validator/index.js .sdd/specs/$FEATURE/requirements.md
+node .agents/skills/spec-validator/index.js .sdd/specs/$FEATURE/tasks.md
+```
+
+판정에 따른 행동:
+
+| 판정 | Slop Score | 행동 |
+|------|-----------|------|
+| OK | < 45 | 구현 진행 |
+| WARN | 45~69 | 경고 출력, 계속 여부 사용자에게 확인 |
+| SLOP | >= 70 | 즉시 중단. 에이전트 구현 지시 금지. |
+
+SLOP 판정 시 출력:
+```
+AGENT KILL -- spec-validator
+Slop Score: {score} SLOP
+
+차단 이유: {findings}
+
+개선 후 /sdd:validate {feature}로 재검증하세요.
+에이전트 구현은 Score < 70 이후 진행 가능합니다.
+```
+
+spec-validator가 설치되지 않은 경우 이 단계 건너뛰고 경고만 출력.
+
+---
+
 ## 준비 단계
 
 1. `.sdd/specs/$FEATURE/` 전체 읽기 (spec.json, requirements.md, design.md, tasks.md)
-   - requirements.md가 **100줄 이상**이면 전체 로드 대신 lazy load 적용:
-     → `.agents/skills/sdd-lazy-load/SKILL.md` 읽고 INDEX 방식으로 관련 섹션만 로드
-2. **`.sdd/lessons/` 읽기 — 반복 버그 예방 체크리스트**:
-   - 먼저 `INDEX.md`만 읽기 (없으면 건너뜀)
-   - 현재 기술 스택 키워드로 관련 ID 필터링 (횟수 2+ 우선)
-   - 해당 ID가 속한 카테고리 파일만 읽기 (전체 파일 로딩 금지)
-   - 추출된 lessons을 구현 전 체크리스트로 변환
-   - lessons가 없으면 건너뜀
-3. `.agents/skills/project-steering/SKILL.md` 읽기 → 기본 references (product/tech/structure) 로드 — **구현 전반의 가드레일**:
-   - `tech`: 사용할 언어/프레임워크/라이브러리 기준
-   - `structure`: 파일 위치, 네이밍 규칙 기준
-   - **스티어링과 충돌하는 구현 선택 금지**
-3. 실행할 태스크 결정:
-   - task-numbers 지정 시 해당 태스크만 (예: "1.1" 또는 "1,2,3")
-   - 없으면 미완료 태스크 순서대로
+   - requirements.md가 **100줄 이상**이면 전체 로드 대신 lazy load 적용
+2. **`.sdd/lessons/` 읽기**
+3. `.agents/skills/project-steering/SKILL.md` 읽기
+4. 실행할 태스크 결정
 
 ## Red-Green-Refactor 사이클
 
-### 🔴 Red — 실패하는 테스트 먼저
+### Red -- 실패하는 테스트 먼저
 1. 태스크의 수락 기준(AC) 읽기
 2. AC를 테스트 코드로 번역
-3. 테스트 실행 → **반드시 실패 확인**
-4. 실패 이유가 "구현 없음"인지 확인 (컴파일 오류 아님)
+3. 테스트 실행 -> 반드시 실패 확인
 
-### 🟢 Green — 최소한의 통과 코드
-1. 테스트를 통과시키는 **최소한의 코드**만 작성
-2. 과도한 엔지니어링 금지
-3. 테스트 실행 → 통과 확인
-4. 기존 테스트 회귀 없음 확인
+### Green -- 최소한의 통과 코드
+1. 테스트를 통과시키는 최소한의 코드만 작성
+2. 테스트 실행 -> 통과 확인
 
-### 🔵 Refactor — 정리
-1. 중복 제거
-2. 네이밍 개선
-3. 구조 정리
-4. **모든 테스트 통과 유지**
+### Refactor -- 정리
+1. 중복 제거, 네이밍 개선, 구조 정리
+2. 모든 테스트 통과 유지
 
-## 체크포인트 (각 태스크 완료 시)
+## 체크포인트
 
-- `tasks.md`의 해당 항목 `[ ]` → `[x]` 업데이트 (Write 도구로 저장)
-- `.sdd/logs/YYYY-MM-DD.md`에 완료 타임스탬프 기록 (Write/Edit 도구로 저장)
+- `tasks.md` 해당 항목 [ ] -> [x] 업데이트
+- `.sdd/logs/YYYY-MM-DD.md` 완료 기록
 
-## 구현 중 스펙 빈틈 발견 시 (피드백 루프)
+## 구현 중 스펙 빈틈 발견 시
 
-구현하다 보면 스펙에서 다루지 않은 케이스가 나온다. 이것은 정상이다 — 코드를 짜면서 스펙이 개선된다.
+발견 즉시 구현 멈추고 스펙 먼저 업데이트. 코드가 스펙보다 먼저 변경되어서는 안 된다.
 
-**발견 즉시:**
-1. 구현을 **멈추고** 스펙 먼저 업데이트
-   - requirements.md: 빠진 요구사항 추가 (EARS 형식)
-   - design.md: 빠진 인터페이스/엣지케이스 추가
-   - tasks.md: 빠진 태스크 추가
-2. 스펙 업데이트 후 구현 재개
+최대 3회 반복. 초과 시 중단 후 사람에게 리포트.
 
-**코드가 스펙보다 먼저 변경되어서는 안 된다.**
-스펙 → 코드 계층은 항상 유지. 코드에서 발견한 것은 스펙에 반영 후 코드에 적용.
+## @impl 태그 자동 생성
 
-**빈틈 유형별 처리:**
-- 엣지케이스 발견 → requirements.md AC에 추가
-- 인터페이스 불명확 → design.md 계약 상세화
-- 외부 스펙 필요 → WebSearch 후 references/ 저장
-- 태스크 과소평가 → tasks.md 서브태스크 분리
+각 태스크 [x] 완료 후 requirements.md에 태그 추가. 개발자 확인 후 저장.
 
-### ⚠️ 피드백 루프 수렴 규칙 (무한루프 방지)
+## 완료 기준
 
-**최대 3회 반복.** 한 구현 세션에서 스펙 수정이 3회를 초과하면:
-1. 구현 **중단**
-2. 발견된 빈틈 목록을 tasks.md에 별도 태스크로 추가
-3. 사람에게 리포트 후 종료:
-   ```
-   ⚠️ 피드백 루프 한계 도달 (3회)
-   발견된 스펙 빈틈: [목록]
-   → 다음 세션에서 이어서 진행 권장
-   ```
-
-**범위 잠금.** 현재 스펙 파일만 수정 가능:
-- ✅ 현재 `$FEATURE`의 requirements/design/tasks
-- ❌ 다른 스펙, 스티어링, 다른 기능에 연쇄 수정 금지
-- 다른 스펙에 영향이 필요하면 → 별도 태스크로 기록 후 사람에게 위임
-
-## @impl 태그 자동 생성 (태스크 완료 시)
-
-각 태스크 `[x]` 완료 후:
-
-1. 구현된 파일경로 + 식별자(함수/클래스/상수명) 파악
-2. `requirements.md`에서 관련 문장 찾기 (태스크 설명 키워드로 매칭)
-3. 해당 문장 아래에 `<!-- @impl: REQ-NNN → 파일경로#식별자 -->` 태그 추가
-   - REQ ID 있으면 반드시 포함 (`REQ-NNN →` 형식)
-   - REQ ID 없는 구버전 요구사항은 기존 형식 유지 (`<!-- @impl: 파일경로#식별자 -->`)
-   - 이미 동일한 태그가 있으면 중복 추가 안 함
-   - 관련 문장을 못 찾으면 파일 맨 끝에 미매핑 목록으로 기록
-4. 생성된 태그 목록을 개발자에게 확인 요청:
-   ```
-   @impl 태그 자동 생성 — 확인해주세요:
-   - REQ-001 "UserAuthService는 JWT 토큰을 발급한다."
-     → <!-- @impl: REQ-001 → src/auth/UserAuthService.ts#UserAuthService.issueToken -->
-   맞으면 OK, 수정이 필요하면 알려주세요.
-   ```
-5. **개발자 OK 확인 후 → Write/Edit 도구로 `requirements.md`에 즉시 저장**
-   - 확인만 받고 저장 안 하면 태그가 유실됨
-   - 저장 완료 후 "✅ @impl 태그 저장됨" 메시지 출력
-
-**규칙:**
-- 자동 생성은 제안이지 확정이 아님 — 개발자 확인 필수
-- 확인 후 반드시 Write 도구로 파일에 저장할 것
-- 잘못된 매핑은 sdd-validate와 spec-delta를 오염시킴
-
-## 완료 기준 (엄격)
-
-태스크 `[x]` 완료 = 다음 **모두** 충족:
-- 테스트 실행 후 통과 확인 (실행 불가 시 `[~]` 사용)
-- design.md의 인터페이스 계약과 구현 일치 확인:
-  - 함수/메서드 시그니처
-  - 이벤트 이름 및 페이로드 타입
-  - 외부로 노출되는 데이터 모델
+- 테스트 통과 확인
+- design.md 인터페이스 계약과 구현 일치
 - 기존 테스트 회귀 없음
 - tasks.md 업데이트
-- 로그에 기록
-
-## 구현 전 설계 계약 확인
-
-각 태스크 구현 전:
-1. design.md에서 해당 컴포넌트의 인터페이스 계약 확인
-2. references/에 저장된 외부 스펙 확인
-3. 구현 시 계약을 코드 주석으로 명시
+- 로그 기록
 
 ## 생성 후 자동 검증
 
 구현 완료 후 `.agents/skills/sdd-validate/SKILL.md` 읽고 Implementation 검증 실행.
-
-## 오류 처리 (자율 모드)
-
-→ `references/tdd-protocol.md` 참조
-
-## 진행 로그 형식
-
-파일: `.sdd/logs/YYYY-MM-DD.md` (없으면 생성, 있으면 append)
-
-```
-[HH:MM] 🔴 태스크 N.M 테스트 작성
-[HH:MM] 🟢 태스크 N.M 구현 완료 (테스트 통과)
-[HH:MM] 🔵 태스크 N.M 리팩토링 완료
-[HH:MM] ✅ 태스크 N.M 완료
-[HH:MM] ⚠️ 태스크 N.M 오류: <내용> — 재시도 1/3
-[HH:MM] ❌ 태스크 N.M 실패: <내용> — 스킵
-```
