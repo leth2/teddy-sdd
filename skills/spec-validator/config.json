@@ -1,0 +1,14 @@
+{
+  "weights": {
+    "s1_decision_density": 0.30,
+    "s2_redundancy": 0.25,
+    "s3_implementability": 0.35,
+    "s4_code_camouflage": 0.10
+  },
+  "thresholds": {
+    "slop": 70,
+    "warn": 45
+  },
+  "phase": 1,
+  "note": "Phase 1 인과사슬 기반 가중치. Phase 2에서 실증 데이터로 교체 예정."
+}
