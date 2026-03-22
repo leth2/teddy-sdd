@@ -16,7 +16,8 @@ const ERROR_CASE_PATTERNS = [
   /\berror\b/gi, /\bexception\b/gi, /\bfail(ure|ed)?\b/gi, /\bedge\s+case\b/gi,
   /\binvalid\b/gi, /\bhandle\b/gi,
 ];
-const TBD_PATTERNS = /\b(TBD|TODO|미정|추후|나중에|FIXME|XXX)\b/gi;
+// TODO: 줄 시작 또는 "TODO:" 형식만 미완성으로 인식 (도메인 용어 "TODO item" 오탐 방지)
+const TBD_PATTERNS = /(\bTBD\b|^\s*TODO[:\s]|미정|추후|나중에|\bFIXME\b|\bXXX\b)/gim;
 const DECISION_PATTERNS = [
   /\d+\s*(ms|초|sec|분|min|byte|MB|GB|개|회)/gi,  // 수치 명시
   /:\s*(int|string|boolean|array|object|number)\b/gi,  // 타입 명시
