@@ -8,7 +8,10 @@
  *
  * Phase 2.1: 에러 케이스 비율(errorCaseRatio) 추가
  *   이슈 #14 실증: 에러 케이스 0개 → 통과율 50~72%로 급락
- *   에러 케이스가 전체 AC 중 절반 이상이면 만점에 가깝게
+ *
+ * Phase 2.2: REQ당 Unwanted 커버리지 (#19 1단계)
+ *   에러 케이스 "개수" → "REQ당 존재 여부"로 전환
+ *   Unwanted 없는 REQ를 명시적으로 경고
  */
 
 // REQ ID 패턴
@@ -23,14 +26,16 @@ const AC_PATTERNS = [
   /^[\s\d*.#-]*\bTHEN\b[^\n]+\bSHALL\b/gim,  // 구조화 EARS THEN...SHALL 라인
 ];
 
-// 에러 케이스 패턴 (Unwanted 템플릿 + AC 에러 단언)
-const ERROR_CASE_PATTERNS = [
+// 에러 케이스 패턴 (Unwanted 템플릿 + AC 에러 단언) — 섹션 내 매칭용
+const ERROR_CASE_RE = [
   // 구조화 EARS Unwanted: IF...THEN 멀티라인
-  /\bIF\b[^\n]*\n\s+THEN\b[^\n]+/gim,
+  /\bIF\b[^\n]*\n\s+THEN\b[^\n]+/im,
+  // IF...THEN 단일라인 + SHALL
+  /\bIF\b[^\n]+\bTHEN\b[^\n]+\bSHALL\b/i,
   // AC 에러 단언: "→ HTTP 4xx" 또는 "→ exit 1" 또는 "ERROR:" 포함
-  /AC\d*[:.]\s*[^\n]*(?:→|:)\s*[^\n]*(?:4\d\d|exit\s*1|ERROR|에러|error code|not found|invalid|required|too long|too many|forbidden|already)/gi,
+  /AC\d*[:.]\s*[^\n]*(?:→|:)\s*[^\n]*(?:4\d\d|exit\s*1|ERROR|에러|not found|invalid|required|too long|too many|forbidden|already)/i,
   // 문장형 에러 조건
-  /(?:없으면|없는\s+경우|초과|잘못된|실패\s*시|오류)[^\n]*(?:반환|exit|출력|에러)/g,
+  /(?:없으면|없는\s*경우|초과|잘못된|실패\s*시|오류)[^\n]*(?:반환|exit|출력|에러)/,
 ];
 
 // EARS 패턴 — 문장형(소문자) + 구조화형(대문자) 모두 지원
@@ -51,8 +56,48 @@ const EARS_PATTERNS = [
 // 구조화 EARS 쌍 카운트 (WHEN/IF → THEN SHALL 완전한 쌍)
 const KIRO_PAIR_RE = /^[\s\d.]*\b(WHEN|IF|WHERE|WHILE)\b[^\n]+\n\s+THEN\b[^\n]+\bSHALL\b/gim;
 
-// 요구사항 항목 패턴 (REQ 또는 번호 기반)
+// 요구사항 항목 패턴 (REQ 또는 번호 기반) — 전체 개수용
 const REQ_ITEM_RE = /^(\*\*\d+\.\d+\*\*|##\s+REQ-\d+|REQ-\d+|\d+\.\d+\.)/gm;
+
+/**
+ * REQ-NNN 기준으로 섹션 분리
+ * @returns {Array<{req_id: string, content: string}>}
+ */
+function parseReqSections(text) {
+  const markers = [...text.matchAll(/`?REQ-(\d{3,})`?/g)];
+  if (markers.length === 0) return [];
+
+  const sections = [];
+  const seen = new Set();
+
+  for (let i = 0; i < markers.length; i++) {
+    const m = markers[i];
+    const reqId = `REQ-${m[1]}`;
+    if (seen.has(reqId)) continue;
+    seen.add(reqId);
+
+    const start = m.index;
+    // 다음 새 REQ 시작점까지
+    let nextStart = text.length;
+    for (let j = i + 1; j < markers.length; j++) {
+      const nextId = `REQ-${markers[j][1]}`;
+      if (!seen.has(nextId)) {
+        nextStart = markers[j].index;
+        break;
+      }
+    }
+    sections.push({ req_id: reqId, content: text.slice(start, nextStart) });
+  }
+
+  return sections;
+}
+
+/**
+ * 섹션에 Unwanted(에러 케이스) 패턴이 있는가
+ */
+function sectionHasUnwanted(sectionText) {
+  return ERROR_CASE_RE.some(p => p.test(sectionText));
+}
 
 export function analyze(text) {
   const findings = [];
@@ -83,27 +128,43 @@ export function analyze(text) {
     });
   }
 
-  // 에러 케이스 카운트 (Unwanted 패턴)
-  let errorCaseCount = 0;
-  for (const p of ERROR_CASE_PATTERNS) {
-    errorCaseCount += (text.match(p) || []).length;
-  }
-
-  // 에러 케이스 비율 계산
+  // REQ당 Unwanted 커버리지 (#19 1단계)
   // 이슈 #14 실증: 에러 케이스 0개 → 통과율 50~72%로 급락
-  // acCount가 있을 때만 비율 의미 있음
-  const errorCaseRatio = acCount > 0 ? errorCaseCount / acCount : 0;
+  // 변경: 에러 케이스 개수 → REQ당 Unwanted 존재 여부
+  const reqSections = parseReqSections(text);
+  const totalReqs = reqSections.length;
+  const reqsWithUnwanted = reqSections.filter(s => sectionHasUnwanted(s.content));
+  const reqsMissingUnwanted = reqSections
+    .filter(s => !sectionHasUnwanted(s.content))
+    .map(s => s.req_id);
+  const unwantedCoverage = totalReqs > 0 ? reqsWithUnwanted.length / totalReqs : 0;
 
-  if (acCount > 0 && errorCaseCount === 0) {
+  // 레거시 에러케이스 카운트 (점수 보조 신호 — 섹션 파싱 없이 전체 텍스트)
+  const errorCaseCount = ERROR_CASE_RE.filter(p =>
+    new RegExp(p.source, p.flags.replace('i', '') + 'gi').test(text)
+  ).length; // 패턴 종류 수 (대략적 존재 여부)
+
+  if (totalReqs > 0) {
+    if (reqsMissingUnwanted.length === totalReqs) {
+      // 모든 REQ에 에러 케이스 없음
+      findings.push({
+        type: 'no_error_cases',
+        message: `모든 REQ에 에러 케이스 없음 — Unwanted 템플릿(IF...THEN) 추가 권고. 통과율 50~72% 위험 (#14)`,
+        severity: 'warn',
+      });
+    } else if (reqsMissingUnwanted.length > 0) {
+      // 일부 REQ에 에러 케이스 없음 — 목록 명시
+      findings.push({
+        type: 'missing_unwanted_reqs',
+        message: `Unwanted 케이스 없는 REQ: ${reqsMissingUnwanted.join(', ')} — 에러/예외 AC 추가 권고`,
+        severity: 'warn',
+      });
+    }
+  } else if (acCount > 0 && errorCaseCount === 0) {
+    // REQ-NNN 없는 스펙 — 전체 텍스트 기준 fallback
     findings.push({
       type: 'no_error_cases',
-      message: 'AC에 에러/예외 케이스 없음 — Unwanted 템플릿(IF...THEN) 추가 권고. 에러 케이스 0개 스펙은 통과율 50~72%로 급락 (이슈 #14)',
-      severity: 'warn',
-    });
-  } else if (acCount > 0 && errorCaseRatio < 0.3) {
-    findings.push({
-      type: 'low_error_ratio',
-      message: `에러 케이스 비율 ${Math.round(errorCaseRatio * 100)}% — 전체 AC 중 에러 케이스 30% 미만. Unwanted(IF...THEN) 추가 권고`,
+      message: 'AC에 에러/예외 케이스 없음 — Unwanted 템플릿(IF...THEN) 추가 권고 (#14)',
       severity: 'warn',
     });
   }
@@ -145,18 +206,25 @@ export function analyze(text) {
   if (acCount > 0) score += 30;
   score += Math.min(acCount * 3, 20);
 
-  // 에러 케이스 비율 보너스/페널티
-  // 0%  → -15 (이미 no_error_cases 경고 발생)
-  // 30% → +0  (중립)
-  // 50%+ → +10 (에러 케이스가 절반 이상이면 보너스)
-  if (acCount > 0) {
-    if (errorCaseCount === 0) {
+  // REQ당 Unwanted 커버리지 보너스/페널티 (#19 1단계)
+  // unwantedCoverage: Unwanted 있는 REQ 비율
+  // 0%   → -15 (치명, 이슈 #14)
+  // <50% → -5  (경고)
+  // 50%+ → +5  (양호)
+  // 80%+ → +10 (우수)
+  if (totalReqs > 0) {
+    if (unwantedCoverage === 0) {
       score -= 15;
-    } else if (errorCaseRatio >= 0.5) {
+    } else if (unwantedCoverage < 0.5) {
+      score -= 5;
+    } else if (unwantedCoverage >= 0.8) {
       score += 10;
-    } else if (errorCaseRatio >= 0.3) {
+    } else {
       score += 5;
     }
+  } else if (acCount > 0 && errorCaseCount === 0) {
+    // REQ-NNN 없는 스펙 fallback
+    score -= 15;
   }
 
   // EARS 존재 보너스 (상세 분석은 S_EARS에서 담당)
@@ -167,6 +235,11 @@ export function analyze(text) {
   return {
     score,
     findings,
-    _debug: { reqIdCount, acCount, errorCaseCount, errorCaseRatio: Math.round(errorCaseRatio * 100) + '%', earsCount },
+    _debug: {
+      reqIdCount, acCount, earsCount,
+      totalReqs, reqsWithUnwanted: reqsWithUnwanted.length,
+      reqsMissingUnwanted,
+      unwantedCoverage: Math.round(unwantedCoverage * 100) + '%',
+    },
   };
 }
