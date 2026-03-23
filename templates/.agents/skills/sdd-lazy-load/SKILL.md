@@ -8,9 +8,13 @@ allowed-tools: Bash Read Grep LS
 
 ## 언제 사용하나
 
-requirements.md가 **100줄 이상**이면 전체 로드 대신 섹션별 로드:
+requirements.md가 **100줄 이상**이면 전체 로드 대신 섹션별 로드.
 
+이유: 100줄 미만이면 전체 로드가 더 단순하다. 줄 수 먼저 확인 후 전략을 선택해야 한다
+
+**예시: 파일 크기 확인 → 전략 결정**
 ```bash
+# 이유: 로드 전략 결정의 기준이 되는 줄 수를 먼저 확인
 wc -l .sdd/specs/$FEATURE/requirements.md
 # 100줄 미만 → 전체 로드 (일반 방식)
 # 100줄 이상 → Lazy Loading 적용
@@ -20,6 +24,7 @@ wc -l .sdd/specs/$FEATURE/requirements.md
 
 대용량 스펙은 아래 구조를 따른다 (spec-requirements가 생성):
 
+**예시: INDEX 포함 대용량 requirements.md 구조**
 ```markdown
 # 요구사항: [Feature 이름]
 
@@ -49,8 +54,11 @@ wc -l .sdd/specs/$FEATURE/requirements.md
 
 ### 1단계: INDEX만 읽기
 
+이유: 파일 전체를 로드하지 않고 목차만 파악해야 토큰 비용을 최소화할 수 있다
+
+**예시: INDEX 섹션 추출**
 ```bash
-# INDEX 섹션만 추출 (## INDEX ~ ## 개요 사이)
+# 이유: INDEX 섹션만 잘라서 읽기 — sed 범위 패턴으로 ## 개요 직전까지만 추출
 sed -n '/^## INDEX/,/^## [^I]/p' requirements.md | head -20
 ```
 
@@ -62,13 +70,17 @@ sed -n '/^## INDEX/,/^## [^I]/p' requirements.md | head -20
 
 ### 3단계: 해당 섹션만 로드
 
+이유: 섹션 이름 패턴 매칭으로 필요한 범위만 추출한다. INDEX 테이블에 줄 번호가 있으면 직접 지정이 더 정확하다
+
+**예시: 섹션 이름 기반 추출**
 ```bash
-# 특정 섹션 추출 (예: "### 1. 사용자 인증" 부터 다음 "###" 전까지)
+# 이유: "### N." 헤더부터 다음 "###" 헤더 전까지를 해당 섹션 범위로 간주
 sed -n '/^### 1\. 사용자 인증/,/^### [^1]/p' requirements.md
 ```
 
-또는 줄 번호로 직접:
+**예시: 줄 번호 직접 지정**
 ```bash
+# 이유: INDEX 테이블의 L15~L60 정보를 활용하면 패턴 매칭보다 확실하게 범위 지정 가능
 sed -n '15,60p' requirements.md
 ```
 
@@ -85,18 +97,19 @@ sed -n '15,60p' requirements.md
 
 ## 로드 전략 요약
 
-| 파일 크기 | 전략 |
-|----------|------|
-| < 100줄 | 전체 로드 (일반 방식) |
-| 100~300줄 | INDEX 먼저 → 관련 섹션 로드 |
-| 300줄 초과 | INDEX 먼저 → 필요한 REQ ID만 grep 추출 |
+| 파일 크기 | 전략 | 이유 |
+|----------|------|------|
+| < 100줄 | 전체 로드 (일반 방식) | 토큰 비용 < 로드 복잡도 |
+| 100~300줄 | INDEX 먼저 → 관련 섹션 로드 | 필요 섹션만 읽어 토큰 절약 |
+| 300줄 초과 | INDEX 먼저 → 필요한 REQ ID만 grep 추출 | 전체 로드 시 컨텍스트 초과 위험 |
 
 ## 다른 스킬에서 사용하는 방법
 
-`sdd-impl`, `sdd-delta`, `sdd-update`에서 requirements.md 로드 전:
+이유: 이 스킬은 독립 실행이 아니라 다른 스킬에서 참조(인라인 호출)하는 방식으로 사용된다
 
+**예시: sdd-impl/sdd-delta/sdd-update에서의 호출 순서**
 ```
-1. wc -l requirements.md 확인
+1. wc -l requirements.md 확인  — 이유: 로드 전략 결정 기준
 2. 100줄 초과 → .agents/skills/sdd-lazy-load/SKILL.md 읽고 INDEX 방식 적용
-3. 100줄 이하 → 전체 로드
+3. 100줄 이하 → 전체 로드  — 이유: 별도 절차 없이 Read 도구로 바로 읽기
 ```

@@ -11,15 +11,19 @@ const CODE_BLOCK_RE = /```(\w*)\n([\s\S]*?)```/g;
 const COMMENT_RE = /^\s*(#|\/\/|\/\*|\*|<!--)/m;
 
 // "왜" 설명 키워드
+// 주의: \b 워드 바운더리는 ASCII 전용 — 한글 키워드는 별도 패턴으로 분리
 const WHY_PATTERNS = [
-  /\b(because|reason|why|이유|왜냐하면|설명|note|참고|explanation)\b/gi,
+  /\b(because|reason|why|note|explanation)\b/gi,
+  /(이유|왜냐하면|설명|참고)/g,  // 한글 키워드 — \b 없이
   /\/\/\s*\S/g,  // 인라인 주석
   /#\s*\S/g,
 ];
 
 // Reference 레이블 패턴 (코드 블록 앞에 레이블 있으면 안전)
+// 주의: \b 워드 바운더리는 ASCII 전용 — 한글 키워드는 별도 패턴으로 분리
 const LABEL_PATTERNS = [
-  /\b(example|예시|reference|레퍼런스|sample|인터페이스|interface|schema|스키마)\b/gi,
+  /\b(example|reference|sample|interface|schema)\b/gi,
+  /(예시|레퍼런스|인터페이스|스키마)/g,  // 한글 레이블 — \b 없이
 ];
 
 export function analyze(text) {
