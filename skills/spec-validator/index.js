@@ -69,8 +69,10 @@ function formatOutput(result, label) {
 async function main() {
   const args = process.argv.slice(2);
   const withLLM = args.includes("--with-llm");
+  const profileArg = args.find(a => a.startsWith("--profile=") || a.startsWith("--profile "));
+  const profileOverride = profileArg ? profileArg.split(/[= ]/)[1] : (args.includes("--profile") ? args[args.indexOf("--profile") + 1] : null);
 
-  const filePath = args.find(a => !a.startsWith("--"));
+  const filePath = args.find(a => !a.startsWith("--") && a !== profileOverride);
 
   if (!filePath) {
     console.error("Usage: node index.js <파일경로> [--no-llm]");
@@ -86,7 +88,7 @@ async function main() {
     label = "inline text";
   }
 
-  const result = await calculateSlopScore(text, filePath, { withLLM });
+  const result = await calculateSlopScore(text, filePath, { withLLM, profileOverride });
   console.log(formatOutput(result, label));
 
   if (result.verdict === "SLOP") process.exit(1);

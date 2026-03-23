@@ -109,9 +109,9 @@ const LLM_SIGNAL_META = {
   s_why: { name: "S_WHY", label: "설계 근거", inverted: true },
 };
 
-export async function calculateSlopScore(text, filePath = "", { withLLM = false } = {}) {
+export async function calculateSlopScore(text, filePath = "", { withLLM = false, profileOverride = null } = {}) {
   const config = loadConfig();
-  const profileName = detectProfile(filePath);
+  const profileName = profileOverride || detectProfile(filePath);
   // withLLM 플래그에 따라 프로파일 선택
   const profileSet = withLLM && config.profiles_with_llm ? config.profiles_with_llm : config.profiles;
   const profile = profileSet[profileName] || config.profiles[profileName] || config.profiles.default;
