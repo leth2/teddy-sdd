@@ -108,19 +108,16 @@ export function analyze(text) {
     });
   }
 
-  // EARS 형식 카운트
+  // EARS 형식 카운트 (존재 여부 확인용 — 상세 분석은 S_EARS에서)
   let earsCount = 0;
   for (const p of EARS_PATTERNS) {
     earsCount += (text.match(p) || []).length;
   }
 
-  // 구조화 EARS 완전한 쌍 카운트
-  const kiroPairs = (text.match(KIRO_PAIR_RE) || []).length;
-
   if (earsCount === 0) {
     findings.push({
       type: 'no_ears_format',
-      message: 'EARS 형식 패턴 없음 — WHEN/IF...THEN...SHALL 또는 When/If/The system shall 권고',
+      message: 'EARS 형식 패턴 없음 — WHEN/IF...THEN...SHALL 또는 When/If/The system shall 권고 (S_EARS 상세 분석)',
       severity: 'warn',
     });
   }
@@ -162,17 +159,14 @@ export function analyze(text) {
     }
   }
 
-  // EARS: 기본 존재 +10, 구조화 완전 쌍 추가 점수 (쌍당 +5, 최대 +25)
+  // EARS 존재 보너스 (상세 분석은 S_EARS에서 담당)
   if (earsCount > 0) score += 10;
-  if (kiroPairs > 0) {
-    score += Math.min(kiroPairs * 5, 25);
-  }
 
   score = Math.max(0, Math.min(100, score));
 
   return {
     score,
     findings,
-    _debug: { reqIdCount, acCount, errorCaseCount, errorCaseRatio: Math.round(errorCaseRatio * 100) + '%', earsCount, kiroPairs },
+    _debug: { reqIdCount, acCount, errorCaseCount, errorCaseRatio: Math.round(errorCaseRatio * 100) + '%', earsCount },
   };
 }

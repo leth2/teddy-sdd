@@ -19,6 +19,7 @@ import { analyze as s3Analyze } from "./rules/s3-contract.js";
 import { analyze as s4Analyze } from "./rules/s4-camouflage.js";
 import { analyze as sAcAnalyze } from "./rules/s-ac.js";
 import { analyze as sDoneAnalyze } from "./rules/s-done.js";
+import { analyze as sEarsAnalyze } from "./rules/s-ears.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -99,6 +100,7 @@ function runRuleSignal(name, text) {
     case "s4": return { name: "S4", label: "코드 위장도", inverted: false, ...s4Analyze(text) };
     case "s_ac": return { name: "S_AC", label: "AC 완결성", inverted: true, ...sAcAnalyze(text) };
     case "s_done": return { name: "S_DONE", label: "완료 기준", inverted: true, ...sDoneAnalyze(text) };
+    case "s_ears": return { name: "S_EARS", label: "EARS 완결성", inverted: true, ...sEarsAnalyze(text) };
     default: return null;
   }
 }

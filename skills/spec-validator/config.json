@@ -1,9 +1,9 @@
 {
   "profiles": {
     "requirements": {
-      "signals": ["s1", "s_ac"],
-      "weights": { "s1": 0.40, "s_ac": 0.60 },
-      "note": "결정 밀도 + AC 완결성. S2(중복도)는 --with-llm 플래그로만 활성화."
+      "signals": ["s1", "s_ac", "s_ears"],
+      "weights": { "s1": 0.35, "s_ac": 0.45, "s_ears": 0.20 },
+      "note": "결정 밀도 + AC 완결성 + EARS 완결성. S_EARS: 5개 템플릿 커버리지, Unwanted 비율. Phase 2.1 #13 옵션 B."
     },
     "design": {
       "signals": ["s1", "s3", "s4"],
@@ -28,8 +28,8 @@
   },
   "profiles_with_llm": {
     "requirements": {
-      "signals": ["s1", "s_ac", "s2"],
-      "weights": { "s1": 0.35, "s_ac": 0.50, "s2": 0.15 },
+      "signals": ["s1", "s_ac", "s_ears", "s2"],
+      "weights": { "s1": 0.30, "s_ac": 0.40, "s_ears": 0.15, "s2": 0.15 },
       "note": "--with-llm 활성화 시. S2(중복도) LLM Judge 포함."
     },
     "design": {
