@@ -59,6 +59,41 @@ const KIRO_PAIR_RE = /^[\s\d.]*\b(WHEN|IF|WHERE|WHILE)\b[^\n]+\n\s+THEN\b[^\n]+\
 // 요구사항 항목 패턴 (REQ 또는 번호 기반) — 전체 개수용
 const REQ_ITEM_RE = /^(\*\*\d+\.\d+\*\*|##\s+REQ-\d+|REQ-\d+|\d+\.\d+\.)/gm;
 
+// REQ 유형 판별 패턴 (#19 2단계)
+// 주의: 한글 키워드에는 \b 워드 바운더리 사용 불가 (ASCII 전용)
+//       한글 패턴은 독립 regex로 분리
+
+// 상호작용형: WHEN/IF/WHILE 트리거 존재 → Unwanted 경고 대상
+const INTERACTION_RE = [
+  /\bWHEN\b.{5,}/i,
+  /\bWHILE\b.{5,}(?:SHALL|MUST)\b/i,
+  /시스템은\s+(?:MUST|SHALL)/,
+  /\bWhen\b[^\n]+(?:요청하면|시도하면|하면)/,
+];
+
+// 제약형: Ubiquitous "The system SHALL" 또는 순수 구현 제약
+// 한글 키워드(\b 없이) + ASCII 키워드(\b 있음)
+const CONSTRAINT_RE = [
+  /^The\s+\w[\w\s]+\bSHALL\b/m,          // "The [시스템] SHALL ..."
+  /(?:비밀번호|패스워드).{0,30}(?:MUST|SHALL|반드시|해야)/,  // 비밀번호 + 의무 키워드
+  /(?:저장|암호화|해싱|bcrypt|salt).{0,50}(?:MUST|SHALL|반드시)/,  // 저장/암호화 제약
+  /(?:로그|audit|logging).{0,50}(?:MUST|SHALL|반드시)/,            // 로깅 제약
+];
+
+/**
+ * REQ 섹션의 EARS 유형 판별
+ * @returns {'interaction' | 'constraint' | 'unknown'}
+ */
+function classifyReqType(sectionText) {
+  // 제약형 패턴이 있고 상호작용형 패턴이 없으면 → constraint
+  const hasConstraint = CONSTRAINT_RE.some(p => p.test(sectionText));
+  const hasInteraction = INTERACTION_RE.some(p => p.test(sectionText));
+
+  if (hasInteraction) return 'interaction';
+  if (hasConstraint) return 'constraint';
+  return 'unknown'; // 판단 불가 → 경고 대상으로 포함
+}
+
 /**
  * REQ-NNN 기준으로 섹션 분리
  * @returns {Array<{req_id: string, content: string}>}
@@ -128,16 +163,28 @@ export function analyze(text) {
     });
   }
 
-  // REQ당 Unwanted 커버리지 (#19 1단계)
+  // REQ당 Unwanted 커버리지 (#19 2단계: 제약형 REQ 면제)
   // 이슈 #14 실증: 에러 케이스 0개 → 통과율 50~72%로 급락
-  // 변경: 에러 케이스 개수 → REQ당 Unwanted 존재 여부
   const reqSections = parseReqSections(text);
   const totalReqs = reqSections.length;
-  const reqsWithUnwanted = reqSections.filter(s => sectionHasUnwanted(s.content));
-  const reqsMissingUnwanted = reqSections
+
+  // 각 REQ를 유형 분류
+  const classifiedReqs = reqSections.map(s => ({
+    ...s,
+    type: classifyReqType(s.content),
+  }));
+
+  // 제약형(constraint)은 Unwanted 경고 대상에서 제외
+  const targetReqs = classifiedReqs.filter(s => s.type !== 'constraint');
+  const constraintReqs = classifiedReqs.filter(s => s.type === 'constraint');
+
+  const reqsWithUnwanted = targetReqs.filter(s => sectionHasUnwanted(s.content));
+  const reqsMissingUnwanted = targetReqs
     .filter(s => !sectionHasUnwanted(s.content))
     .map(s => s.req_id);
-  const unwantedCoverage = totalReqs > 0 ? reqsWithUnwanted.length / totalReqs : 0;
+
+  const targetCount = targetReqs.length;
+  const unwantedCoverage = targetCount > 0 ? reqsWithUnwanted.length / targetCount : 1; // 대상 없으면 100%
 
   // 레거시 에러케이스 카운트 (점수 보조 신호 — 섹션 파싱 없이 전체 텍스트)
   const errorCaseCount = ERROR_CASE_RE.filter(p =>
@@ -145,18 +192,21 @@ export function analyze(text) {
   ).length; // 패턴 종류 수 (대략적 존재 여부)
 
   if (totalReqs > 0) {
-    if (reqsMissingUnwanted.length === totalReqs) {
-      // 모든 REQ에 에러 케이스 없음
+    if (reqsMissingUnwanted.length === targetCount && targetCount > 0) {
+      // 대상 REQ 전부 에러 케이스 없음
       findings.push({
         type: 'no_error_cases',
         message: `모든 REQ에 에러 케이스 없음 — Unwanted 템플릿(IF...THEN) 추가 권고. 통과율 50~72% 위험 (#14)`,
         severity: 'warn',
       });
     } else if (reqsMissingUnwanted.length > 0) {
-      // 일부 REQ에 에러 케이스 없음 — 목록 명시
+      // 일부 REQ 누락 — 목록 명시 (제약형 제외됨)
+      const exemptNote = constraintReqs.length > 0
+        ? ` (${constraintReqs.map(s => s.req_id).join(', ')} 제약형 면제)`
+        : '';
       findings.push({
         type: 'missing_unwanted_reqs',
-        message: `Unwanted 케이스 없는 REQ: ${reqsMissingUnwanted.join(', ')} — 에러/예외 AC 추가 권고`,
+        message: `Unwanted 케이스 없는 REQ: ${reqsMissingUnwanted.join(', ')} — 에러/예외 AC 추가 권고${exemptNote}`,
         severity: 'warn',
       });
     }
@@ -206,13 +256,13 @@ export function analyze(text) {
   if (acCount > 0) score += 30;
   score += Math.min(acCount * 3, 20);
 
-  // REQ당 Unwanted 커버리지 보너스/페널티 (#19 1단계)
-  // unwantedCoverage: Unwanted 있는 REQ 비율
+  // REQ당 Unwanted 커버리지 보너스/페널티 (#19 2단계: 제약형 면제 반영)
+  // unwantedCoverage: 상호작용형/unknown REQ 중 Unwanted 있는 비율
   // 0%   → -15 (치명, 이슈 #14)
   // <50% → -5  (경고)
   // 50%+ → +5  (양호)
   // 80%+ → +10 (우수)
-  if (totalReqs > 0) {
+  if (targetCount > 0) {
     if (unwantedCoverage === 0) {
       score -= 15;
     } else if (unwantedCoverage < 0.5) {
@@ -237,7 +287,9 @@ export function analyze(text) {
     findings,
     _debug: {
       reqIdCount, acCount, earsCount,
-      totalReqs, reqsWithUnwanted: reqsWithUnwanted.length,
+      totalReqs, targetReqs: targetCount,
+      constraintReqs: constraintReqs.map(s => s.req_id),
+      reqsWithUnwanted: reqsWithUnwanted.length,
       reqsMissingUnwanted,
       unwantedCoverage: Math.round(unwantedCoverage * 100) + '%',
     },
