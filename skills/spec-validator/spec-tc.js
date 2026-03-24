@@ -14,13 +14,23 @@
 import { readFileSync } from 'fs';
 
 // EARS 패턴 파서 — 멀티라인 우선
+// THEN 절이 에러 응답인지 판별: ERROR / exit / stderr / 4xx / 5xx
+const THEN_ERROR_RE = /\b(ERROR|error|stderr|exit\s*1|exit\s*2|4\d\d|5\d\d)\b/i;
+
 const EARS_PARSERS = [
   {
-    type: 'unwanted',
-    label: '에러 케이스',
+    type: 'if_branch',          // 분류는 extract 후 결정
+    label: '조건 케이스',
     // IF [조건]\n  THEN [시스템] SHALL [결과]
     re: /\bIF\b([^\n]+)\n\s+THEN\b([^\n]+)/gim,
-    extract: (m) => ({ condition: m[1].trim(), result: m[2].trim() }),
+    extract: (m) => {
+      const condition = m[1].trim();
+      const result = m[2].trim();
+      // THEN 절에 에러 응답 키워드 있으면 Unwanted, 없으면 조건부 정상
+      const type = THEN_ERROR_RE.test(result) ? 'unwanted' : 'event_driven';
+      const label = type === 'unwanted' ? '에러 케이스' : '정상 케이스 (조건부)';
+      return { condition, result, type, label };
+    },
   },
   {
     type: 'event_driven',
@@ -58,12 +68,11 @@ function parseEARS(sectionText) {
     parser.re.lastIndex = 0;
     let m;
     while ((m = parser.re.exec(sectionText)) !== null) {
-      results.push({
-        type: parser.type,
-        label: parser.label,
-        ...parser.extract(m),
-        raw: m[0],
-      });
+      const extracted = parser.extract(m);
+      // if_branch는 extract가 type/label을 결정
+      const type = extracted.type ?? parser.type;
+      const label = extracted.label ?? parser.label;
+      results.push({ type, label, ...extracted, raw: m[0] });
     }
   }
 
@@ -133,7 +142,11 @@ function toTestDesc(ac) {
       if (ac.trigger && ac.result) {
         return `${ac.trigger.replace(/^a\s+/i, '')} → ${extractExpected(ac.result)}`;
       }
-      return ac.description || ac.raw?.slice(0, 60);
+      // IF → 정상 케이스 전환 (조건부 기능): condition 필드 사용
+      if (ac.condition && ac.result) {
+        return `[조건] ${ac.condition.replace(/^`?the\s*/i, '')} → ${extractExpected(ac.result)}`;
+      }
+      return ac.description || (ac.raw || '').replace(/\n\s*/g, ' ').slice(0, 60);
 
     case 'state_driven':
       return `[${ac.state}] 상태에서 ${extractExpected(ac.result)}`;
@@ -177,8 +190,17 @@ function generateTestSkeleton(reqId, acs) {
     const desc = toTestDesc(ac);
     lines.push(`  test("${desc}", async () => {`);
     lines.push(`    // TODO: 정상 케이스 구현`);
-    lines.push(`    // WHEN: ${ac.trigger || ac.description || ''}`);
-    lines.push(`    // THEN: ${ac.result || ''}`);
+    // EARS 형식이면 WHEN/THEN 명시, AC fallback이면 케이스 설명만
+    if (ac.trigger) {
+      lines.push(`    // WHEN: ${ac.trigger}`);
+      if (ac.result) lines.push(`    // THEN: ${ac.result}`);
+    } else if (ac.condition) {
+      // IF → 조건부 정상 케이스
+      lines.push(`    // IF: ${ac.condition}`);
+      if (ac.result) lines.push(`    // THEN: ${ac.result}`);
+    } else {
+      lines.push(`    // 케이스: ${ac.description || ''}`);
+    }
     lines.push(`    expect(true).toBe(true); // placeholder`);
     lines.push(`  });`);
     lines.push(``);
@@ -188,8 +210,12 @@ function generateTestSkeleton(reqId, acs) {
     const desc = toTestDesc(ac);
     lines.push(`  test("${desc}", async () => {`);
     lines.push(`    // TODO: 에러 케이스 구현`);
-    lines.push(`    // IF: ${ac.condition || ac.description || ''}`);
-    lines.push(`    // THEN: ${ac.result || ''}`);
+    if (ac.condition) {
+      lines.push(`    // IF: ${ac.condition}`);
+      if (ac.result) lines.push(`    // THEN: ${ac.result}`);
+    } else {
+      lines.push(`    // 케이스: ${ac.description || ''}`);
+    }
     lines.push(`    expect(true).toBe(true); // placeholder`);
     lines.push(`  });`);
     lines.push(``);
@@ -199,6 +225,7 @@ function generateTestSkeleton(reqId, acs) {
     const desc = toTestDesc(ac);
     lines.push(`  test("${desc}", async () => {`);
     lines.push(`    // TODO: 검증 케이스 구현`);
+    lines.push(`    // 케이스: ${ac.description || ''}`);
     lines.push(`    expect(true).toBe(true); // placeholder`);
     lines.push(`  });`);
     lines.push(``);
@@ -252,12 +279,13 @@ export function generateTC(specPath, { output = 'print' } = {}) {
   const summary = [];
 
   for (const r of results) {
-    if (r.skeleton) {
+    if (r.skeleton && r.total > 0) {
       lines.push(r.skeleton);
       lines.push(``);
-      summary.push(`  ✅ ${r.req_id}: 정상 ${r.normalCount}개, 에러 ${r.errorCount}개`);
+      const icon = r.errorCount > 0 ? '✅' : '🟡';
+      summary.push(`  ${icon} ${r.req_id}: 정상 ${r.normalCount}개, 에러 ${r.errorCount}개`);
     } else {
-      summary.push(`  ⚠️  ${r.req_id}: EARS 패턴 없음 — Unwanted 템플릿 추가 권고`);
+      summary.push(`  ⚠️  ${r.req_id}: 테스트 케이스 0개 — EARS 패턴 없음, Unwanted 템플릿 추가 권고`);
     }
   }
 
