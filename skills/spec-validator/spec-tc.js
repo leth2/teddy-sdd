@@ -18,41 +18,39 @@ import { join, dirname, basename } from 'path';
 // THEN 절이 에러 응답인지 판별: ERROR / exit / stderr / 4xx / 5xx
 const THEN_ERROR_RE = /\b(ERROR|error|stderr|exit\s*1|exit\s*2|4\d\d|5\d\d)\b/i;
 
+// 멀티 THEN 캡처: 조건 이후 연속된 THEN 줄 전체 수집
+// IF/WHEN/WHILE/WHERE [조건]\n  THEN [결과1]\n  THEN [결과2]...
+const MULTI_THEN_RE = /\b(IF|WHEN|WHILE|WHERE)\b([^\n]+)\n((?:\s+THEN\b[^\n]+\n?)+)/gim;
+
 const EARS_PARSERS = [
   {
-    type: 'if_branch',          // 분류는 extract 후 결정
-    label: '조건 케이스',
-    // IF [조건]\n  THEN [시스템] SHALL [결과]
-    re: /\bIF\b([^\n]+)\n\s+THEN\b([^\n]+)/gim,
+    type: 'multi',   // 파서에서 type/label 결정
+    label: '',
+    re: MULTI_THEN_RE,
     extract: (m) => {
-      const condition = m[1].trim();
-      const result = m[2].trim();
-      // THEN 절에 에러 응답 키워드 있으면 Unwanted, 없으면 조건부 정상
-      const type = THEN_ERROR_RE.test(result) ? 'unwanted' : 'event_driven';
-      const label = type === 'unwanted' ? '에러 케이스' : '정상 케이스 (조건부)';
-      return { condition, result, type, label };
+      const keyword = m[1].toUpperCase();
+      const head = m[2].trim();
+      // 모든 THEN 줄 수집
+      const thenLines = [...m[3].matchAll(/THEN\b([^\n]+)/gi)].map(t => t[1].trim());
+      const result = thenLines.join(' | ');
+
+      // 유형 결정
+      let type, label;
+      if (keyword === 'IF') {
+        type = THEN_ERROR_RE.test(result) ? 'unwanted' : 'event_driven';
+        label = type === 'unwanted' ? '에러 케이스' : '정상 케이스 (조건부)';
+      } else if (keyword === 'WHEN') {
+        type = 'event_driven'; label = '정상 케이스';
+      } else if (keyword === 'WHILE') {
+        type = 'state_driven'; label = '상태 케이스';
+      } else {
+        type = 'optional'; label = '선택 케이스';
+      }
+
+      const key = keyword === 'IF' ? 'condition' : keyword === 'WHEN' ? 'trigger'
+        : keyword === 'WHILE' ? 'state' : 'feature';
+      return { [key]: head, result, thenLines, type, label };
     },
-  },
-  {
-    type: 'event_driven',
-    label: '정상 케이스',
-    // WHEN [트리거]\n  THEN [시스템] SHALL [결과]
-    re: /\bWHEN\b([^\n]+)\n\s+THEN\b([^\n]+)/gim,
-    extract: (m) => ({ trigger: m[1].trim(), result: m[2].trim() }),
-  },
-  {
-    type: 'state_driven',
-    label: '상태 케이스',
-    // WHILE [상태]\n  THEN [시스템] SHALL [결과]
-    re: /\bWHILE\b([^\n]+)\n\s+THEN\b([^\n]+)/gim,
-    extract: (m) => ({ state: m[1].trim(), result: m[2].trim() }),
-  },
-  {
-    type: 'optional',
-    label: '선택 케이스',
-    // WHERE [조건]\n  THEN [시스템] SHALL [결과]
-    re: /\bWHERE\b([^\n]+)\n\s+THEN\b([^\n]+)/gim,
-    extract: (m) => ({ feature: m[1].trim(), result: m[2].trim() }),
   },
 ];
 
@@ -137,7 +135,7 @@ function toTestDesc(ac) {
       if (ac.condition && ac.result) {
         return `${ac.condition.replace(/^the\s+/i, '')} → ${extractExpected(ac.result)}`;
       }
-      return ac.description || ac.raw?.slice(0, 60);
+      return ac.description || ac.raw?.slice(0, 100);
 
     case 'event_driven':
       if (ac.trigger && ac.result) {
@@ -147,7 +145,7 @@ function toTestDesc(ac) {
       if (ac.condition && ac.result) {
         return `[조건] ${ac.condition.replace(/^`?the\s*/i, '')} → ${extractExpected(ac.result)}`;
       }
-      return ac.description || (ac.raw || '').replace(/\n\s*/g, ' ').slice(0, 60);
+      return ac.description || (ac.raw || '').replace(/\n\s*/g, ' ').slice(0, 100);
 
     case 'state_driven':
       return `[${ac.state}] 상태에서 ${extractExpected(ac.result)}`;
@@ -176,49 +174,59 @@ function extractExpected(resultStr) {
 
 /**
  * Gap 2: AC 설명에서 실제 단언(assertion) 추출
- * "잘못된 비밀번호 → HTTP 401" → expect(res.status).toBe(401)
- * "ERROR: title required" → expect(stderr).toContain("ERROR: title required")
- * exit 1 → expect(exitCode).toBe(1)
+ * "잘못된 비밀번호 → HTTP 401"              → expect(res.status).toBe(401)
+ * `{ error: "TOKEN_EXPIRED" }`             → expect(body.error).toBe("TOKEN_EXPIRED")
+ * "ERROR: title required" to stderr        → expect(stderr).toContain("ERROR: title required")
+ * exit 1 / exit with code 1               → expect(exitCode).toBe(1)
  */
 function extractAssertions(ac) {
   const text = [ac.result, ac.condition, ac.description].filter(Boolean).join(' ');
   const assertions = [];
 
-  // HTTP 상태코드: → HTTP 201 / HTTP 401 등
+  // 1. HTTP 상태코드: → HTTP 201 / HTTP 401 등
   const httpMatch = text.match(/→\s*HTTP\s+(\d{3})|HTTP\s+(\d{3})/i);
   if (httpMatch) {
     const code = httpMatch[1] || httpMatch[2];
     assertions.push(`expect(res.status).toBe(${code});`);
   }
 
-  // exit code: exit 1 / exit 0
-  const exitMatch = text.match(/exit\s+(\d+)/i);
+  // 2. exit code: exit 1 / exit 0 / exit with code N / exits with N
+  const exitMatch = text.match(/exit(?:\s+with(?:\s+code)?)?\s+(\d+)/i);
   if (exitMatch) {
     assertions.push(`expect(exitCode).toBe(${exitMatch[1]});`);
   }
 
-  // 에러 코드 문자열: `ERROR_CODE` 형식
-  const errCodeMatch = text.match(/`([A-Z][A-Z0-9_]{2,})`/g);
-  if (errCodeMatch) {
-    for (const m of errCodeMatch) {
-      const code = m.replace(/`/g, '');
-      if (code !== 'ERROR') { // 단독 ERROR는 제외
+  // 3. JSON error 코드: `{ error: "TOKEN_EXPIRED" }` / error: "CODE"
+  //    단순 백틱 `TOKEN_EXPIRED` 형식도 지원
+  const jsonErrMatch = text.match(/error[`"':\s]*["']([A-Z][A-Z0-9_]{2,})["']/g);
+  if (jsonErrMatch) {
+    for (const m of jsonErrMatch) {
+      const code = m.match(/["']([A-Z][A-Z0-9_]{2,})["']/);
+      if (code) assertions.push(`expect(body.error).toBe("${code[1]}");`);
+    }
+  } else {
+    // 백틱 단독 에러 코드: `TOKEN_EXPIRED` (JSON 형식 없을 때)
+    const tickMatch = text.match(/`([A-Z][A-Z0-9_]{3,})`/g);
+    if (tickMatch) {
+      for (const m of tickMatch) {
+        const code = m.replace(/`/g, '');
         assertions.push(`expect(body.error).toBe("${code}");`);
       }
     }
   }
 
-  // stderr 출력: 'ERROR: ...' to stderr
-  const stderrMatch = text.match(/`(ERROR:[^`]+)`\s*to\s*stderr/i)
-    || text.match(/print\s*`(ERROR:[^`]+)`/i);
+  // 4. stderr 메시지: `ERROR: ...` to stderr / print `ERROR: ...`
+  //    주의: ERROR: 로 시작하는 전체 메시지 추출
+  const stderrMatch = text.match(/`(ERROR:[^`]+)`(?:\s*to\s*stderr)?/i)
+    || text.match(/print\s+["']?(ERROR[^"'`\n]+)["']?\s*to\s*stderr/i);
   if (stderrMatch) {
-    assertions.push(`expect(stderr).toContain("${stderrMatch[1]}");`);
+    assertions.push(`expect(stderr).toContain("${stderrMatch[1].trim()}");`);
   }
 
-  // stdout 출력: print `...` to stdout
-  const stdoutMatch = text.match(/print\s*`([^`]+)`\s*to\s*stdout/i);
+  // 5. stdout 출력: print `...` to stdout / print `#<id>...`
+  const stdoutMatch = text.match(/print\s+["'`]([^"'`\n]+)["'`]\s*to\s*stdout/i);
   if (stdoutMatch) {
-    assertions.push(`expect(stdout).toContain("${stdoutMatch[1].slice(0, 40)}");`);
+    assertions.push(`expect(stdout).toContain("${stdoutMatch[1].slice(0, 100).trim()}");`);
   }
 
   return assertions;
