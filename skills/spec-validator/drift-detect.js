@@ -103,11 +103,7 @@ function checkIdentifierExists(codeRoot, file, identifier) {
 
   const found = patterns.some(p => p.test(content));
   if (!found) {
-    // grep으로 단순 키워드 존재 확인 (fallback)
-    const grepFound = content.includes(searchTerm);
-    if (!grepFound) {
-      return { ok: false, reason: `식별자 없음: ${identifier} (이동됐을 수 있음)` };
-    }
+    return { ok: false, reason: `식별자 없음: ${identifier} (이동됐을 수 있음)` };
   }
 
   // 행 번호 찾기

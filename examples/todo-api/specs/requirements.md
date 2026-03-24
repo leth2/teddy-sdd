@@ -37,7 +37,7 @@
 - AC3: title 200자 초과 → HTTP 400 + `{ error: "TITLE_TOO_LONG" }`
 - AC4: 생성된 TODO는 해당 사용자에게만 귀속됨 (다른 사용자 접근 불가)
 <!-- @impl: REQ-004 → src/routes/todos.ts#createTodo -->
-<!-- @impl: REQ-004 → src/services/todo.ts#TodoService.create -->
+<!-- @impl: REQ-004 → src/services/todo.ts#createTodo -->
 
 **2.2** `REQ-005` When 인증된 사용자가 TODO 목록을 요청하면,
 시스템은 MUST 해당 사용자의 TODO만 반환한다.
@@ -46,7 +46,7 @@
 - AC3: `?page=N&limit=N` 페이지네이션 (기본: page=1, limit=20)
 - AC4: 다른 사용자의 TODO가 포함되지 않음
 <!-- @impl: REQ-005 → src/routes/todos.ts#listTodos -->
-<!-- @impl: REQ-005 → src/services/todo.ts#TodoService.list -->
+<!-- @impl: REQ-005 → src/services/todo.ts#listTodos -->
 
 **2.3** `REQ-006` When 인증된 사용자가 자신의 TODO를 수정 요청하면,
 시스템은 MUST 변경사항을 저장하고 수정된 TODO를 반환한다.
@@ -54,7 +54,7 @@
 - AC2: 존재하지 않는 TODO → HTTP 404 + `{ error: "TODO_NOT_FOUND" }`
 - AC3: 다른 사용자의 TODO 수정 시도 → HTTP 403 + `{ error: "FORBIDDEN" }`
 <!-- @impl: REQ-006 → src/routes/todos.ts#updateTodo -->
-<!-- @impl: REQ-006 → src/services/todo.ts#TodoService.update -->
+<!-- @impl: REQ-006 → src/services/todo.ts#updateTodo -->
 
 **2.4** `REQ-007` When 인증된 사용자가 자신의 TODO 삭제를 요청하면,
 시스템은 MUST 해당 TODO를 삭제하고 HTTP 204를 반환한다.
@@ -62,7 +62,7 @@
 - AC2: 존재하지 않는 TODO → HTTP 404
 - AC3: 다른 사용자의 TODO 삭제 시도 → HTTP 403
 <!-- @impl: REQ-007 → src/routes/todos.ts#deleteTodo -->
-<!-- @impl: REQ-007 → src/services/todo.ts#TodoService.delete -->
+<!-- @impl: REQ-007 → src/services/todo.ts#deleteTodo -->
 
 ### 3. 태그
 
@@ -71,14 +71,14 @@
 - AC1: `tags: string[]` (각 태그 최대 50자, 최대 10개)
 - AC2: 태그 개수 초과 → HTTP 400 + `{ error: "TOO_MANY_TAGS" }`
 - AC3: 태그 길이 초과 → HTTP 400 + `{ error: "TAG_TOO_LONG" }`
-<!-- @impl: REQ-008 → src/services/todo.ts#TodoService.create -->
-<!-- @impl: REQ-008 → src/services/todo.ts#TodoService.update -->
+<!-- @impl: REQ-008 → src/services/todo.ts#createTodo -->
+<!-- @impl: REQ-008 → src/services/todo.ts#updateTodo -->
 
 **3.2** `REQ-009` 사용자는 MUST 태그로 TODO를 필터링할 수 있다.
 - AC1: `GET /todos?tag=work` → 해당 태그가 붙은 TODO만 반환
 - AC2: 존재하지 않는 태그로 필터링 → 빈 목록 반환 (404 아님)
 <!-- @impl: REQ-009 → src/routes/todos.ts#listTodos -->
-<!-- @impl: REQ-009 → src/services/todo.ts#TodoService.list -->
+<!-- @impl: REQ-009 → src/services/todo.ts#listTodos -->
 
 ## 제약 조건
 
