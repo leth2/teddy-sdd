@@ -1,6 +1,6 @@
 ---
 name: sdd-validate
-description: 스펙 단계별 검증. Requirements/Design/Tasks/Impl 각 단계 완료 후 품질 검증. 누락, 불일치, 테스트 미통과 항목 보고.
+description: 스펙 품질 검증 게이트. /sdd:spec-validate 커맨드. Requirements/Design/Tasks/Impl 각 단계 완료 후 Slop Score 측정 + Agent Kill 판정. 누락, 불일치, 테스트 미통과 항목 보고.
 allowed-tools: Bash Read Write Edit Glob Grep LS WebSearch WebFetch
 ---
 
@@ -11,7 +11,7 @@ allowed-tools: Bash Read Write Edit Glob Grep LS WebSearch WebFetch
 > **SDD는 직선이 아니라 피드백 루프다.** 스펙 → 코드가 아니라, 코드를 짜면서 스펙이 개선된다.  
 > 검증은 이 루프를 건강하게 유지하기 위한 도구다.
 
-각 spec 단계 완료 직후 자동 실행 (또는 수동 `/sdd:spec-val` 호출)
+각 spec 단계 완료 직후 자동 실행 (또는 수동 `/sdd:spec-validate` 호출; `/sdd:spec-val` 은 하위 호환 alias)
 
 ## Requirements 검증
 

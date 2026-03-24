@@ -63,7 +63,7 @@ tasks.md 있음 + 구현할 태스크 번호 알고 있음
 ```
 구현 완료 후 동기화 확인
   → /sdd:spec-delta — @impl 태그 상태 확인
-  → /sdd:spec-val  — 요구사항 충족 여부 검증
+  → /sdd:spec-validate  — 요구사항 충족 여부 검증
 ```
 **Input**: feature 이름
 **Output**: 갭 목록 또는 "동기화 완료"
@@ -118,7 +118,7 @@ CLAUDE.md 50줄 초과 위험 또는 스티어링 비대
 | sdd-design | /sdd:spec-design | `.agents/skills/sdd-design/SKILL.md` |
 | sdd-tasks | /sdd:spec-tasks | `.agents/skills/sdd-tasks/SKILL.md` |
 | sdd-impl | /sdd:spec-impl | `.agents/skills/sdd-impl/SKILL.md` |
-| sdd-validate | /sdd:spec-val | `.agents/skills/sdd-validate/SKILL.md` |
+| sdd-validate | /sdd:spec-validate | `.agents/skills/sdd-validate/SKILL.md` |
 | sdd-update | /sdd:spec-update | `.agents/skills/sdd-update/SKILL.md` |
 | sdd-decompose | /sdd:spec-decomp | `.agents/skills/sdd-decompose/SKILL.md` |
 | sdd-delta | /sdd:spec-delta | `.agents/skills/sdd-delta/SKILL.md` |

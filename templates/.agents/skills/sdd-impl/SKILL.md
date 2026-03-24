@@ -30,7 +30,7 @@ Slop Score: {score} SLOP
 
 차단 이유: {findings}
 
-개선 후 /sdd:validate {feature}로 재검증하세요.
+개선 후 /sdd:spec-validate {feature}로 재검증하세요.
 에이전트 구현은 Score < 70 이후 진행 가능합니다.
 ```
 
