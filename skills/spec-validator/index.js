@@ -6,6 +6,7 @@
 
 import { readFileSync, existsSync } from "fs";
 import { calculateSlopScore, detectProfile } from "./scorer.js";
+import { generateTC } from "./spec-tc.js";
 
 const VERDICT_EMOJI = { OK: "🟢", WARN: "🟡", SLOP: "🔴" };
 const SEVERITY_EMOJI = { fail: "❌", warn: "⚠️ ", info: "ℹ️ " };
@@ -69,14 +70,21 @@ function formatOutput(result, label) {
 async function main() {
   const args = process.argv.slice(2);
   const withLLM = args.includes("--with-llm");
+  const specTC = args.includes("--spec-tc");
   const profileArg = args.find(a => a.startsWith("--profile=") || a.startsWith("--profile "));
   const profileOverride = profileArg ? profileArg.split(/[= ]/)[1] : (args.includes("--profile") ? args[args.indexOf("--profile") + 1] : null);
 
   const filePath = args.find(a => !a.startsWith("--") && a !== profileOverride);
 
   if (!filePath) {
-    console.error("Usage: node index.js <파일경로> [--no-llm]");
+    console.error("Usage: node index.js <파일경로> [--no-llm] [--spec-tc]");
     process.exit(1);
+  }
+
+  // --spec-tc: EARS → 테스트 코드 골격 생성 (이슈 #19 3단계)
+  if (specTC) {
+    generateTC(filePath, { output: 'print' });
+    return;
   }
 
   let text, label;
