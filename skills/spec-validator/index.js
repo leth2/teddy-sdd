@@ -81,9 +81,12 @@ async function main() {
     process.exit(1);
   }
 
-  // --spec-tc: EARS → 테스트 코드 골격 생성 (이슈 #19 3단계)
+  // --spec-tc: EARS → 테스트 코드 골격 생성 (이슈 #5 Spec=TC)
   if (specTC) {
-    generateTC(filePath, { output: 'print' });
+    const outIdx = args.indexOf('--out');
+    const outDir = outIdx !== -1 ? args[outIdx + 1] : null;
+    const output = outDir ? 'file' : 'print';
+    generateTC(filePath, { output, outDir });
     return;
   }
 

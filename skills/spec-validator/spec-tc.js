@@ -11,7 +11,8 @@
  *   AC: → HTTP/exit/err      → 검증 단언 추출
  */
 
-import { readFileSync } from 'fs';
+import { readFileSync, writeFileSync, mkdirSync, existsSync } from 'fs';
+import { join, dirname, basename } from 'path';
 
 // EARS 패턴 파서 — 멀티라인 우선
 // THEN 절이 에러 응답인지 판별: ERROR / exit / stderr / 4xx / 5xx
@@ -174,6 +175,56 @@ function extractExpected(resultStr) {
 }
 
 /**
+ * Gap 2: AC 설명에서 실제 단언(assertion) 추출
+ * "잘못된 비밀번호 → HTTP 401" → expect(res.status).toBe(401)
+ * "ERROR: title required" → expect(stderr).toContain("ERROR: title required")
+ * exit 1 → expect(exitCode).toBe(1)
+ */
+function extractAssertions(ac) {
+  const text = [ac.result, ac.condition, ac.description].filter(Boolean).join(' ');
+  const assertions = [];
+
+  // HTTP 상태코드: → HTTP 201 / HTTP 401 등
+  const httpMatch = text.match(/→\s*HTTP\s+(\d{3})|HTTP\s+(\d{3})/i);
+  if (httpMatch) {
+    const code = httpMatch[1] || httpMatch[2];
+    assertions.push(`expect(res.status).toBe(${code});`);
+  }
+
+  // exit code: exit 1 / exit 0
+  const exitMatch = text.match(/exit\s+(\d+)/i);
+  if (exitMatch) {
+    assertions.push(`expect(exitCode).toBe(${exitMatch[1]});`);
+  }
+
+  // 에러 코드 문자열: `ERROR_CODE` 형식
+  const errCodeMatch = text.match(/`([A-Z][A-Z0-9_]{2,})`/g);
+  if (errCodeMatch) {
+    for (const m of errCodeMatch) {
+      const code = m.replace(/`/g, '');
+      if (code !== 'ERROR') { // 단독 ERROR는 제외
+        assertions.push(`expect(body.error).toBe("${code}");`);
+      }
+    }
+  }
+
+  // stderr 출력: 'ERROR: ...' to stderr
+  const stderrMatch = text.match(/`(ERROR:[^`]+)`\s*to\s*stderr/i)
+    || text.match(/print\s*`(ERROR:[^`]+)`/i);
+  if (stderrMatch) {
+    assertions.push(`expect(stderr).toContain("${stderrMatch[1]}");`);
+  }
+
+  // stdout 출력: print `...` to stdout
+  const stdoutMatch = text.match(/print\s*`([^`]+)`\s*to\s*stdout/i);
+  if (stdoutMatch) {
+    assertions.push(`expect(stdout).toContain("${stdoutMatch[1].slice(0, 40)}");`);
+  }
+
+  return assertions;
+}
+
+/**
  * TypeScript/Vitest 테스트 골격 생성
  */
 function generateTestSkeleton(reqId, acs) {
@@ -186,61 +237,63 @@ function generateTestSkeleton(reqId, acs) {
   const lines = [];
   lines.push(`describe("${reqId}", () => {`);
 
-  for (const ac of normalAcs) {
+  const renderAc = (ac, todoLabel) => {
     const desc = toTestDesc(ac);
+    const assertions = extractAssertions(ac);
+    const hasAssertions = assertions.length > 0;
+
     lines.push(`  test("${desc}", async () => {`);
-    lines.push(`    // TODO: 정상 케이스 구현`);
-    // EARS 형식이면 WHEN/THEN 명시, AC fallback이면 케이스 설명만
+    lines.push(`    // @spec ${reqId}`);
+    lines.push(`    // TODO: ${todoLabel}`);
+
     if (ac.trigger) {
       lines.push(`    // WHEN: ${ac.trigger}`);
       if (ac.result) lines.push(`    // THEN: ${ac.result}`);
     } else if (ac.condition) {
-      // IF → 조건부 정상 케이스
       lines.push(`    // IF: ${ac.condition}`);
       if (ac.result) lines.push(`    // THEN: ${ac.result}`);
     } else {
       lines.push(`    // 케이스: ${ac.description || ''}`);
     }
-    lines.push(`    expect(true).toBe(true); // placeholder`);
-    lines.push(`  });`);
-    lines.push(``);
-  }
 
-  for (const ac of errorAcs) {
-    const desc = toTestDesc(ac);
-    lines.push(`  test("${desc}", async () => {`);
-    lines.push(`    // TODO: 에러 케이스 구현`);
-    if (ac.condition) {
-      lines.push(`    // IF: ${ac.condition}`);
-      if (ac.result) lines.push(`    // THEN: ${ac.result}`);
+    if (hasAssertions) {
+      lines.push(``);
+      for (const a of assertions) {
+        lines.push(`    ${a}`);
+      }
     } else {
-      lines.push(`    // 케이스: ${ac.description || ''}`);
+      lines.push(`    expect(true).toBe(true); // placeholder`);
     }
-    lines.push(`    expect(true).toBe(true); // placeholder`);
-    lines.push(`  });`);
-    lines.push(``);
-  }
 
-  for (const ac of unknownAcs) {
-    const desc = toTestDesc(ac);
-    lines.push(`  test("${desc}", async () => {`);
-    lines.push(`    // TODO: 검증 케이스 구현`);
-    lines.push(`    // 케이스: ${ac.description || ''}`);
-    lines.push(`    expect(true).toBe(true); // placeholder`);
     lines.push(`  });`);
     lines.push(``);
-  }
+  };
+
+  for (const ac of normalAcs)  renderAc(ac, '정상 케이스 구현');
+  for (const ac of errorAcs)   renderAc(ac, '에러 케이스 구현');
+  for (const ac of unknownAcs) renderAc(ac, '검증 케이스 구현');
 
   lines.push(`});`);
   return lines.join('\n');
 }
 
+const FILE_HEADER = (specPath) => [
+  `// 자동 생성 — spec-tc`,
+  `// 소스: ${specPath}`,
+  `// 이슈 #5 Spec = TC 파이프라인`,
+  `// @spec-source ${specPath}`,
+  `import { describe, test, expect } from "vitest";`,
+  ``,
+].join('\n');
+
 /**
  * 메인 진입점
  * @param {string} specPath - requirements.md 파일 경로
- * @param {Object} options - { output: 'print'|'file', outDir: string }
+ * @param {Object} options
+ *   output: 'print' | 'file'
+ *   outDir: 파일 출력 디렉토리 (--out 플래그)
  */
-export function generateTC(specPath, { output = 'print' } = {}) {
+export function generateTC(specPath, { output = 'print', outDir = null } = {}) {
   const text = readFileSync(specPath, 'utf-8');
   const sections = parseReqSections(text);
 
@@ -249,54 +302,59 @@ export function generateTC(specPath, { output = 'print' } = {}) {
   for (const section of sections) {
     const earsAcs = parseEARS(section.content);
     const acLineAcs = parseACLines(section.content);
-
-    // EARS 패턴이 있으면 우선, 없으면 AC 라인 fallback
     const acs = earsAcs.length > 0 ? earsAcs : acLineAcs;
 
     const errorCount = acs.filter(a => a.type === 'unwanted').length;
     const normalCount = acs.filter(a => a.type !== 'unwanted' && a.type !== 'unknown').length;
-
     const skeleton = generateTestSkeleton(section.req_id, acs);
-    const hasUnwanted = errorCount > 0;
 
-    results.push({
-      req_id: section.req_id,
-      total: acs.length,
-      normalCount,
-      errorCount,
-      hasUnwanted,
-      skeleton,
-    });
+    results.push({ req_id: section.req_id, total: acs.length, normalCount, errorCount, skeleton });
   }
 
-  // 출력
-  const lines = [];
-  lines.push(`// 자동 생성 — spec-tc (${specPath})`);
-  lines.push(`// 이슈 #19 3단계 / 이슈 #5 Spec = TC 파이프라인`);
-  lines.push(`import { describe, test, expect } from "vitest";`);
-  lines.push(``);
-
   const summary = [];
+  const allCode = [FILE_HEADER(specPath)];
+
+  // 파일 출력용 분리 코드 (REQ별)
+  const perReqFiles = {};
 
   for (const r of results) {
     if (r.skeleton && r.total > 0) {
-      lines.push(r.skeleton);
-      lines.push(``);
       const icon = r.errorCount > 0 ? '✅' : '🟡';
       summary.push(`  ${icon} ${r.req_id}: 정상 ${r.normalCount}개, 에러 ${r.errorCount}개`);
+      allCode.push(r.skeleton, '');
+      perReqFiles[r.req_id] = FILE_HEADER(specPath) + r.skeleton + '\n';
     } else {
-      summary.push(`  ⚠️  ${r.req_id}: 테스트 케이스 0개 — EARS 패턴 없음, Unwanted 템플릿 추가 권고`);
+      summary.push(`  ⚠️  ${r.req_id}: 테스트 케이스 0개 — EARS 패턴 없음, Unwanted 추가 권고`);
     }
   }
+
+  const code = allCode.join('\n');
 
   // 헤더 출력
   console.log(`\n📋 spec-tc: ${specPath}`);
   console.log(summary.join('\n'));
 
-  if (output === 'print') {
+  if (output === 'file' && outDir) {
+    // Gap 1: 파일 출력
+    if (!existsSync(outDir)) mkdirSync(outDir, { recursive: true });
+
+    // 통합 파일
+    const allFile = join(outDir, 'spec.test.ts');
+    writeFileSync(allFile, code, 'utf-8');
+    console.log(`\n📁 출력:`);
+    console.log(`  ${allFile} (전체 통합)`);
+
+    // REQ별 파일
+    for (const [reqId, content] of Object.entries(perReqFiles)) {
+      const fname = join(outDir, `${reqId.toLowerCase()}.test.ts`);
+      writeFileSync(fname, content, 'utf-8');
+      console.log(`  ${fname}`);
+    }
+    console.log(`\n총 ${Object.keys(perReqFiles).length}개 REQ 파일 생성됨.`);
+  } else {
     console.log(`\n${'─'.repeat(60)}\n`);
-    console.log(lines.join('\n'));
+    console.log(code);
   }
 
-  return { summary, code: lines.join('\n'), results };
+  return { summary, code, results };
 }
