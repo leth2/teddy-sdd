@@ -12,16 +12,21 @@
 - AC1: 유효한 이메일+비밀번호 → HTTP 200 + `{ token: string, expiresAt: ISO8601 }`
 - AC2: 잘못된 비밀번호 → HTTP 401 + `{ error: "INVALID_CREDENTIALS" }`
 - AC3: 존재하지 않는 이메일 → HTTP 401 + `{ error: "INVALID_CREDENTIALS" }` (이메일 존재 여부 노출 금지)
+<!-- @impl: REQ-001 → src/routes/auth.ts#login -->
+<!-- @impl: REQ-001 → src/services/auth.ts#AuthService.login -->
 
 **1.2** `REQ-002` When 인증이 필요한 API에 토큰 없이 요청하면,
 시스템은 MUST HTTP 401을 반환하고 요청을 처리하지 않는다.
 - AC1: Authorization 헤더 없음 → HTTP 401
 - AC2: 만료된 토큰 → HTTP 401 + `{ error: "TOKEN_EXPIRED" }`
 - AC3: 유효하지 않은 토큰 형식 → HTTP 401 + `{ error: "INVALID_TOKEN" }`
+<!-- @impl: REQ-002 → src/middleware/auth.ts#requireAuth -->
 
 **1.3** `REQ-003` 비밀번호는 MUST bcrypt(cost=12)로 해싱하여 저장한다.
 - AC1: DB에 평문 비밀번호가 저장되지 않음 (bcrypt 해시 형식 확인)
 - AC2: 로그인 시 bcrypt.compare로 검증
+<!-- @impl: REQ-003 → src/services/auth.ts#AuthService.hashPassword -->
+<!-- @impl: REQ-003 → src/services/auth.ts#hashPassword -->
 
 ### 2. TODO 관리
 
@@ -31,6 +36,8 @@
 - AC2: title 없음 → HTTP 400 + `{ error: "TITLE_REQUIRED" }`
 - AC3: title 200자 초과 → HTTP 400 + `{ error: "TITLE_TOO_LONG" }`
 - AC4: 생성된 TODO는 해당 사용자에게만 귀속됨 (다른 사용자 접근 불가)
+<!-- @impl: REQ-004 → src/routes/todos.ts#createTodo -->
+<!-- @impl: REQ-004 → src/services/todo.ts#TodoService.create -->
 
 **2.2** `REQ-005` When 인증된 사용자가 TODO 목록을 요청하면,
 시스템은 MUST 해당 사용자의 TODO만 반환한다.
@@ -38,18 +45,24 @@
 - AC2: `?tag=string` 쿼리로 태그 필터링 가능
 - AC3: `?page=N&limit=N` 페이지네이션 (기본: page=1, limit=20)
 - AC4: 다른 사용자의 TODO가 포함되지 않음
+<!-- @impl: REQ-005 → src/routes/todos.ts#listTodos -->
+<!-- @impl: REQ-005 → src/services/todo.ts#TodoService.list -->
 
 **2.3** `REQ-006` When 인증된 사용자가 자신의 TODO를 수정 요청하면,
 시스템은 MUST 변경사항을 저장하고 수정된 TODO를 반환한다.
 - AC1: 부분 수정(PATCH) 지원 — 전달한 필드만 변경
 - AC2: 존재하지 않는 TODO → HTTP 404 + `{ error: "TODO_NOT_FOUND" }`
 - AC3: 다른 사용자의 TODO 수정 시도 → HTTP 403 + `{ error: "FORBIDDEN" }`
+<!-- @impl: REQ-006 → src/routes/todos.ts#updateTodo -->
+<!-- @impl: REQ-006 → src/services/todo.ts#TodoService.update -->
 
 **2.4** `REQ-007` When 인증된 사용자가 자신의 TODO 삭제를 요청하면,
 시스템은 MUST 해당 TODO를 삭제하고 HTTP 204를 반환한다.
 - AC1: 삭제 성공 → HTTP 204 (응답 본문 없음)
 - AC2: 존재하지 않는 TODO → HTTP 404
 - AC3: 다른 사용자의 TODO 삭제 시도 → HTTP 403
+<!-- @impl: REQ-007 → src/routes/todos.ts#deleteTodo -->
+<!-- @impl: REQ-007 → src/services/todo.ts#TodoService.delete -->
 
 ### 3. 태그
 
@@ -58,10 +71,14 @@
 - AC1: `tags: string[]` (각 태그 최대 50자, 최대 10개)
 - AC2: 태그 개수 초과 → HTTP 400 + `{ error: "TOO_MANY_TAGS" }`
 - AC3: 태그 길이 초과 → HTTP 400 + `{ error: "TAG_TOO_LONG" }`
+<!-- @impl: REQ-008 → src/services/todo.ts#TodoService.create -->
+<!-- @impl: REQ-008 → src/services/todo.ts#TodoService.update -->
 
 **3.2** `REQ-009` 사용자는 MUST 태그로 TODO를 필터링할 수 있다.
 - AC1: `GET /todos?tag=work` → 해당 태그가 붙은 TODO만 반환
 - AC2: 존재하지 않는 태그로 필터링 → 빈 목록 반환 (404 아님)
+<!-- @impl: REQ-009 → src/routes/todos.ts#listTodos -->
+<!-- @impl: REQ-009 → src/services/todo.ts#TodoService.list -->
 
 ## 제약 조건
 
