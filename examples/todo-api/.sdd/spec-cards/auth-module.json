@@ -1,0 +1,32 @@
+{
+  "name": "auth-module",
+  "version": "1.0.0",
+  "description": "사용자 인증 및 JWT 토큰 관리",
+  "domain": "auth",
+  "responsibilities": [
+    "이메일/비밀번호 로그인",
+    "JWT 액세스 토큰 발급",
+    "토큰 검증 미들웨어",
+    "비밀번호 bcrypt 해싱"
+  ],
+  "interface": {
+    "input": [
+      "POST /auth/login { email: string, password: string }",
+      "Authorization: Bearer <token> (헤더)"
+    ],
+    "output": [
+      "{ token: string, expiresAt: ISO8601 }",
+      "HTTP 401 { error: 'INVALID_CREDENTIALS' | 'TOKEN_EXPIRED' | 'INVALID_TOKEN' }"
+    ],
+    "errors": [
+      "INVALID_CREDENTIALS",
+      "TOKEN_EXPIRED",
+      "INVALID_TOKEN"
+    ]
+  },
+  "dependencies": [],
+  "spec": ".sdd/specs/auth/requirements.md",
+  "reqs": ["REQ-001", "REQ-002", "REQ-003"],
+  "owner": "dev-team",
+  "updated": "2026-04-04"
+}
