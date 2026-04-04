@@ -1,0 +1,78 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "SDD Spec Card",
+  "description": "모듈의 책임/인터페이스를 선언하는 스펙 카드. A2A agent-card 패턴 적용.",
+  "type": "object",
+  "required": ["name", "description", "responsibilities", "spec"],
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "모듈 식별자 (kebab-case)",
+      "examples": ["auth-module", "todo-api", "payment-gateway"]
+    },
+    "version": {
+      "type": "string",
+      "description": "스펙 카드 버전",
+      "default": "1.0.0"
+    },
+    "description": {
+      "type": "string",
+      "description": "모듈이 하는 일 한 줄 요약"
+    },
+    "responsibilities": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "이 모듈이 책임지는 기능 목록"
+    },
+    "domain": {
+      "type": "string",
+      "description": "RTM 도메인 prefix (requirements.json과 연동)",
+      "examples": ["auth", "todo.creation", "payment"]
+    },
+    "interface": {
+      "type": "object",
+      "description": "이 모듈의 공개 인터페이스",
+      "properties": {
+        "input": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "입력 파라미터/이벤트 목록"
+        },
+        "output": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "출력/반환값/이벤트 목록"
+        },
+        "errors": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "발생 가능한 에러 목록"
+        }
+      }
+    },
+    "dependencies": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "의존하는 다른 모듈명 목록"
+    },
+    "spec": {
+      "type": "string",
+      "description": "requirements.md 상대 경로"
+    },
+    "reqs": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "이 카드가 커버하는 REQ ID 목록",
+      "examples": [["REQ-001", "REQ-002", "REQ-003"]]
+    },
+    "owner": {
+      "type": "string",
+      "description": "담당 팀/에이전트"
+    },
+    "updated": {
+      "type": "string",
+      "format": "date",
+      "description": "마지막 갱신일"
+    }
+  }
+}
